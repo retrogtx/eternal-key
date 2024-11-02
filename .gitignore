@@ -40,6 +40,7 @@ yarn-error.log*
 next-env.d.ts
 
 # Anchor
+switch/node_modules
 .anchor
 target
 **/*.rs.bk
