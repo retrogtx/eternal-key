@@ -1,12 +1,12 @@
 import * as anchor from "@project-serum/anchor";
 import { Keypair, SystemProgram } from '@solana/web3.js';
 import { assert } from 'chai';
+import { describe, it, before } from 'mocha';
 
 describe("switch", () => {
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
-
-  // We'll get the program after building
+  
   const program = anchor.workspace.Switch;
   
   const owner = Keypair.generate();
@@ -15,7 +15,6 @@ describe("switch", () => {
   let switchAccount: Keypair;
 
   before(async () => {
-    // Airdrop SOL to owner
     const signature = await provider.connection.requestAirdrop(
       owner.publicKey,
       2 * anchor.web3.LAMPORTS_PER_SOL
@@ -86,9 +85,8 @@ describe("switch", () => {
   });
 
   it("Executes transfer after deadline", async () => {
-    // Fast forward time by modifying the deadline
     const pastDeadline = new Date();
-    pastDeadline.setDate(pastDeadline.getDate() - 1); // 1 day ago
+    pastDeadline.setDate(pastDeadline.getDate() - 1); 
 
     await program.methods
       .checkIn(new anchor.BN(pastDeadline.getTime()))
@@ -108,7 +106,6 @@ describe("switch", () => {
       })
       .rpc();
 
-    // Verify the transfer
     const escrowBalance = await provider.connection.getBalance(escrow.publicKey);
     assert.equal(escrowBalance, 0, "Escrow should be empty");
   });

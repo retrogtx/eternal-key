@@ -1,21 +1,17 @@
 {
     "scripts": {
-        "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
-        "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
         "test": "anchor test"
-    },
-    "dependencies": {
-        "@project-serum/anchor": "^0.26.0",
-        "@solana/web3.js": "^1.95.4"
     },
     "devDependencies": {
         "@types/bn.js": "^5.1.0",
-        "@types/chai": "^4.3.0",
-        "@types/mocha": "^9.0.0",
-        "chai": "^4.3.4",
+        "@types/chai": "^4.3.20",
+        "@types/mocha": "^9.1.1",
+        "chai": "^4.5.0",
         "mocha": "^9.0.3",
-        "prettier": "^2.6.2",
         "ts-mocha": "^10.0.0",
         "typescript": "^4.3.5"
+    },
+    "dependencies": {
+        "@project-serum/anchor": "^0.26.0"
     }
 }
