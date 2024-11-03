@@ -3,12 +3,6 @@
 import React, { FC, useState, useEffect, useCallback } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { Transaction, PublicKey, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import dynamic from 'next/dynamic';
-
-const WalletMultiButton = dynamic(
-  () => import('@solana/wallet-adapter-react-ui').then((mod) => mod.WalletMultiButton),
-  { ssr: false }
-);
 
 const DeadManSwitch: FC = () => {
   const { connection } = useConnection();
@@ -163,8 +157,6 @@ const DeadManSwitch: FC = () => {
 
   return (
     <div className="p-8 max-w-2xl mx-auto">
-      <WalletMultiButton />
-      
       {publicKey && (
         <div className="mt-8 space-y-6">
           <div>

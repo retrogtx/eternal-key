@@ -9,15 +9,15 @@ const WalletConnectionProvider = dynamic(
   { ssr: false }
 );
 
-const DeadManSwitch = dynamic(
-  () => import('@/components/DeadManSwitch'),
+const Landing = dynamic(
+  () => import('@/components/Landing'),
   { ssr: false }
 );
 
 const Home: FC = () => {
   return (
     <WalletConnectionProvider>
-      <DeadManSwitch />
+      <Landing />
     </WalletConnectionProvider>
   );
 };
