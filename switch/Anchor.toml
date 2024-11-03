@@ -3,7 +3,7 @@ seeds = false
 skip-lint = false
 
 [programs.devnet]
-switch = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+switch = "AwPCqYWqJA2N1oZRNvt4wRUFNnH8kij4kuiKNNomSY7F"
 
 [registry]
 url = "https://api.apr.dev"
