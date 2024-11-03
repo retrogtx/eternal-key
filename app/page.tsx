@@ -9,15 +9,15 @@ const WalletConnectionProvider = dynamic(
   { ssr: false }
 );
 
-const Landing = dynamic(
-  () => import('@/components/Landing'),
+const HomePage = dynamic(
+  () => import('@/components/HomePage'),
   { ssr: false }
 );
 
 const Home: FC = () => {
   return (
     <WalletConnectionProvider>
-      <Landing />
+      <HomePage />
     </WalletConnectionProvider>
   );
 };

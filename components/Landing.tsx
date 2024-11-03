@@ -1,6 +1,6 @@
 'use client';
 
-import React, { FC } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
@@ -13,13 +13,19 @@ const WalletMultiButton = dynamic(
 const Landing: FC = () => {
   const { connected } = useWallet();
   const router = useRouter();
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
-  // Redirect to dashboard if wallet is connected
-  React.useEffect(() => {
-    if (connected) {
+  useEffect(() => {
+    if (connected && !isRedirecting) {
+      setIsRedirecting(true);
       router.push('/dashboard');
     }
-  }, [connected, router]);
+  }, [connected, router, isRedirecting]);
+
+  // Prevent flickering by not rendering during redirect
+  if (isRedirecting) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-gray-900 to-black text-white">

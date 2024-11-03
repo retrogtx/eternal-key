@@ -1,6 +1,6 @@
 'use client';
 
-import React, { FC } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
@@ -13,14 +13,28 @@ const DeadManSwitch = dynamic(
 const Dashboard: FC = () => {
   const { connected } = useWallet();
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Redirect to home if wallet is not connected
-  React.useEffect(() => {
-    if (!connected) {
-      router.push('/');
-    }
+  useEffect(() => {
+    const checkWallet = async () => {
+      // Add a small delay to prevent immediate redirection
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      if (!connected) {
+        router.replace('/');
+      }
+      setIsLoading(false);
+    };
+
+    checkWallet();
   }, [connected, router]);
 
+  // Show nothing while checking wallet status
+  if (isLoading) {
+    return null;
+  }
+
+  // If not connected, show nothing (redirect will happen)
   if (!connected) {
     return null;
   }
@@ -29,7 +43,7 @@ const Dashboard: FC = () => {
     <div className="min-h-screen bg-gray-900 text-white">
       <nav className="bg-gray-800 p-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Dead Man&apos;s Switch Dashboard</h1>
+          <h1 className="text-2xl font-bold">Eternal Key</h1>
           <div className="flex items-center space-x-4">
             <button
               onClick={() => router.push('/')}
