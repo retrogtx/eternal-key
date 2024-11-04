@@ -28,17 +28,17 @@ pub mod switch {
         Ok(())
     }
 
-    pub fn execute_transfer(ctx: Context<ExecuteTransfer>) -> Result<()> {
-        let switch = &ctx.accounts.switch;
+    pub fn verify_deadline(ctx: Context<VerifyDeadline>) -> Result<()> {
+        let switch = &mut ctx.accounts.switch;
         let clock = Clock::get()?;
         
         require!(switch.is_active, SwitchError::SwitchInactive);
-        require!(clock.unix_timestamp >= switch.deadline, SwitchError::DeadlineNotReached);
-        
-        let transfer_amount = ctx.accounts.escrow.lamports();
-        **ctx.accounts.escrow.try_borrow_mut_lamports()? = 0;
-        **ctx.accounts.beneficiary.try_borrow_mut_lamports()? += transfer_amount;
-        
+        require!(
+            clock.unix_timestamp >= switch.deadline, 
+            SwitchError::DeadlineNotReached
+        );
+
+        switch.is_active = false;
         Ok(())
     }
 }
@@ -54,10 +54,6 @@ pub struct Initialize<'info> {
         space = 8 + 32 + 32 + 8 + 1 // discriminator + owner + beneficiary + deadline + is_active
     )]
     pub switch: Account<'info, DeadManSwitch>,
-    
-    #[account(mut)]
-    /// CHECK: This is the escrow that will hold the funds
-    pub escrow: AccountInfo<'info>,
     
     pub system_program: Program<'info, System>,
 }
@@ -75,23 +71,14 @@ pub struct CheckIn<'info> {
 }
 
 #[derive(Accounts)]
-pub struct ExecuteTransfer<'info> {
+pub struct VerifyDeadline<'info> {
     #[account(
         mut,
-        constraint = switch.is_active,
-        constraint = Clock::get().unwrap().unix_timestamp >= switch.deadline,
+        constraint = switch.beneficiary == beneficiary.key()
     )]
     pub switch: Account<'info, DeadManSwitch>,
-    
-    #[account(mut)]
-    /// CHECK: This is the escrow that holds the funds
-    pub escrow: AccountInfo<'info>,
-    
-    #[account(
-        mut,
-        constraint = beneficiary.key() == switch.beneficiary
-    )]
-    /// CHECK: This is the beneficiary that will receive the funds
+
+    /// CHECK: Beneficiary is verified against switch account
     pub beneficiary: AccountInfo<'info>,
 }
 
