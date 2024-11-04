@@ -17,7 +17,7 @@ import { IDL } from '../types/dead-man-switch';
 // Update this with your actual deployed program ID
 const PROGRAM_ID = new PublicKey(
   process.env.NEXT_PUBLIC_PROGRAM_ID || 
-  'AwPCqYWqJA2N1oZRNvt4wRUFNnH8kij4kuiKNNomSY7F'
+  '8hK7vGkWap7CwfWnZG8igqz5uxevUDTbhoeuCcwgvpYq'
 );
 
 // Create a custom wallet adapter that matches Anchor's requirements
