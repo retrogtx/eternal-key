@@ -6,10 +6,11 @@ declare_id!("8hK7vGkWap7CwfWnZG8igqz5uxevUDTbhoeuCcwgvpYq");
 pub mod switch {
     use super::*;
 
-    pub fn initialize(
-        ctx: Context<Initialize>,
-        beneficiary: Pubkey,
+    pub fn create_switch(
+        ctx: Context<CreateSwitch>,
         deadline: i64,
+        beneficiary: Pubkey,
+        seed: String,
     ) -> Result<()> {
         let switch = &mut ctx.accounts.switch;
         switch.owner = ctx.accounts.owner.key();
@@ -44,14 +45,17 @@ pub mod switch {
 }
 
 #[derive(Accounts)]
-pub struct Initialize<'info> {
+#[instruction(deadline: i64, beneficiary: Pubkey, seed: String)]
+pub struct CreateSwitch<'info> {
     #[account(mut)]
     pub owner: Signer<'info>,
     
     #[account(
         init,
         payer = owner,
-        space = 8 + 32 + 32 + 8 + 1 // discriminator + owner + beneficiary + deadline + is_active
+        space = 8 + 32 + 32 + 8 + 1,
+        seeds = [seed.as_bytes(), owner.key().as_ref()],
+        bump
     )]
     pub switch: Account<'info, DeadManSwitch>,
     

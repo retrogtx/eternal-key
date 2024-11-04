@@ -15,10 +15,7 @@ import { Program, AnchorProvider, BN } from '@coral-xyz/anchor';
 import { IDL } from '../types/dead-man-switch';
 
 // Update this with your actual deployed program ID
-const PROGRAM_ID = new PublicKey(
-  process.env.NEXT_PUBLIC_PROGRAM_ID || 
-  '8hK7vGkWap7CwfWnZG8igqz5uxevUDTbhoeuCcwgvpYq'
-);
+const PROGRAM_ID = new PublicKey('8hK7vGkWap7CwfWnZG8igqz5uxevUDTbhoeuCcwgvpYq');
 
 // Create a custom wallet adapter that matches Anchor's requirements
 class CustomWallet {
@@ -86,140 +83,51 @@ const DeadManSwitch: FC = () => {
     }
 
     try {
-      // Calculate the space needed for the switch account first
-      const SWITCH_ACCOUNT_SIZE = 8 + 32 + 32 + 8 + 1;
-      const switchRent = await connection.getMinimumBalanceForRentExemption(SWITCH_ACCOUNT_SIZE);
-      
-      // Check wallet balance first
-      const balance = await connection.getBalance(publicKey);
-      const ONE_SOL = LAMPORTS_PER_SOL; // 1 SOL in lamports
-      const TRANSACTION_FEE = 10000; // 10000 lamports for safety
+      // Create switch account with seed to ensure uniqueness
+      const seed = new Date().getTime().toString();
+      const [switchPubkey] = PublicKey.findProgramAddressSync(
+        [Buffer.from(seed), publicKey.toBuffer()],
+        PROGRAM_ID
+      );
 
-      // Check if wallet has enough SOL
-      const minimumRequired = ONE_SOL + switchRent + TRANSACTION_FEE;
-      if (balance < minimumRequired) {
-        const currentBalanceSOL = balance / LAMPORTS_PER_SOL;
-        alert(`Insufficient funds. You have ${currentBalanceSOL.toFixed(6)} SOL but need at least ${(minimumRequired / LAMPORTS_PER_SOL).toFixed(6)} SOL`);
-        return;
-      }
-
-      console.log('Starting switch activation...');
-      console.log('Program ID:', PROGRAM_ID.toString());
-      console.log('Owner:', publicKey.toString());
-      console.log('Beneficiary:', beneficiaryAddress);
-      console.log('Switch Account Rent:', switchRent / LAMPORTS_PER_SOL, 'SOL');
-
-      const now = new Date();
       const newTargetTime = new Date();
       newTargetTime.setDate(newTargetTime.getDate() + days);
       newTargetTime.setMinutes(newTargetTime.getMinutes() + minutes);
-      
-      // We only need the switch account now
-      let switchAccount: Keypair | null = null;
-      let accountsInUse = true;
-      let attempts = 0;
-      const MAX_ATTEMPTS = 10;
 
-      // Keep trying until we find unused switch account address
-      while (accountsInUse && attempts < MAX_ATTEMPTS) {
-        try {
-          const newSwitchAccount = Keypair.generate();
+      const { blockhash } = await connection.getLatestBlockhash();
 
-          // Check if account exists
-          const switchInfo = await connection.getAccountInfo(newSwitchAccount.publicKey);
-
-          if (!switchInfo) {
-            // Additional verification with program
-            try {
-              const switchAccountData = await program.account.deadManSwitch.fetch(
-                newSwitchAccount.publicKey
-              ).catch(() => null);
-              
-              if (!switchAccountData) {
-                switchAccount = newSwitchAccount;
-                accountsInUse = false;
-                break;
-              }
-            } catch {
-              // If fetch fails, account doesn't exist, which is what we want
-              switchAccount = newSwitchAccount;
-              accountsInUse = false;
-              break;
-            }
-          }
-          attempts++;
-        } catch {
-          attempts++;
-        }
-      }
-
-      if (!switchAccount || attempts >= MAX_ATTEMPTS) {
-        throw new Error('Failed to generate unique account address after multiple attempts');
-      }
-
-      console.log('Successfully generated switch account:', switchAccount.publicKey.toString());
-
-      // Get blockhash first
-      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
-
-      // Create switch account instruction
-      const createSwitchAccountIx = SystemProgram.createAccount({
-        fromPubkey: publicKey,
-        newAccountPubkey: switchAccount.publicKey,
-        space: SWITCH_ACCOUNT_SIZE,
-        lamports: switchRent,
-        programId: PROGRAM_ID
-      });
-
-      // Transfer 1 SOL directly to the beneficiary
-      const transferIx = SystemProgram.transfer({
-        fromPubkey: publicKey,
-        toPubkey: new PublicKey(beneficiaryAddress),
-        lamports: ONE_SOL,
-      });
-
-      const initInstruction = await program.methods
-        .initialize(
+      // Create switch account using PDA
+      const createSwitchAccountIx = await program.methods
+        .createSwitch(
+          new BN(newTargetTime.getTime() / 1000),
           new PublicKey(beneficiaryAddress),
-          new BN(newTargetTime.getTime() / 1000)
+          seed
         )
         .accounts({
           owner: publicKey,
-          switch: switchAccount.publicKey,
+          switch: switchPubkey,
           systemProgram: SystemProgram.programId,
         })
         .instruction();
 
-      console.log('Creating transaction...');
+      // Transfer SOL to beneficiary
+      const transferIx = SystemProgram.transfer({
+        fromPubkey: publicKey,
+        toPubkey: new PublicKey(beneficiaryAddress),
+        lamports: LAMPORTS_PER_SOL
+      });
 
       const messageV0 = new TransactionMessage({
         payerKey: publicKey,
         recentBlockhash: blockhash,
-        instructions: [
-          createSwitchAccountIx,
-          transferIx,
-          initInstruction
-        ]
+        instructions: [createSwitchAccountIx, transferIx]
       }).compileToV0Message();
 
       const transaction = new VersionedTransaction(messageV0);
-      transaction.sign([switchAccount]);
-      
-      console.log('Transaction signed by switch account...');
       const signedTransaction = await signTransaction(transaction);
-      console.log('Transaction signed by wallet...');
-
-      console.log('Sending transaction...');
       const signature = await connection.sendRawTransaction(signedTransaction.serialize());
+      await connection.confirmTransaction(signature);
 
-      console.log('Confirming transaction...');
-      await connection.confirmTransaction({
-        signature,
-        blockhash,
-        lastValidBlockHeight
-      });
-
-      const originalDuration = newTargetTime.getTime() - now.getTime();
       setTargetTime(newTargetTime);
       setIsActive(true);
       
@@ -227,34 +135,15 @@ const DeadManSwitch: FC = () => {
         targetTime: newTargetTime.toISOString(),
         beneficiaryAddress,
         isActive: true,
-        originalDuration,
-        switchPublicKey: switchAccount.publicKey.toString(),
-        escrowPublicKey: switchAccount.publicKey.toString()
+        switchPublicKey: switchPubkey.toString()
       }));
-
-      console.log('Switch activated:', signature);
 
     } catch (error: unknown) {
       const programError = error as ProgramError;
       console.error('Detailed error:', programError);
-      
-      if (programError.logs) {
-        console.error('Program logs:', programError.logs);
-        
-        // More specific error messages
-        if (programError.logs.some(log => log.includes('already in use'))) {
-          alert('Account address collision. Please try again.');
-          return;
-        }
-        if (programError.logs.some(log => log.includes('insufficient lamports'))) {
-          alert('Insufficient SOL balance for the transfer. Please reduce the amount or add more SOL.');
-          return;
-        }
-      }
-
       alert(`Failed to activate switch: ${programError.message}`);
     }
-  };
+};
 
   const handleCustomTimer = () => {
     const days = parseInt(customDays) || 0;

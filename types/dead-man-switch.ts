@@ -5,7 +5,7 @@ export type DeadManSwitchIDL = {
   name: "dead_man_switch";
   instructions: [
     {
-      name: "initialize";
+      name: "createSwitch";
       accounts: [
         {
           name: "owner";
@@ -15,7 +15,7 @@ export type DeadManSwitchIDL = {
         {
           name: "switch";
           isMut: true;
-          isSigner: true;
+          isSigner: false;
         },
         {
           name: "systemProgram";
@@ -25,12 +25,16 @@ export type DeadManSwitchIDL = {
       ];
       args: [
         {
+          name: "deadline";
+          type: "i64";
+        },
+        {
           name: "beneficiary";
           type: "publicKey";
         },
         {
-          name: "deadline";
-          type: "i64";
+          name: "seed";
+          type: "string";
         }
       ];
     },
@@ -105,7 +109,7 @@ export const IDL: DeadManSwitchIDL = {
   name: "dead_man_switch",
   instructions: [
     {
-      name: "initialize",
+      name: "createSwitch",
       accounts: [
         {
           name: "owner",
@@ -115,7 +119,7 @@ export const IDL: DeadManSwitchIDL = {
         {
           name: "switch",
           isMut: true,
-          isSigner: true
+          isSigner: false
         },
         {
           name: "systemProgram",
@@ -125,12 +129,16 @@ export const IDL: DeadManSwitchIDL = {
       ],
       args: [
         {
+          name: "deadline",
+          type: "i64"
+        },
+        {
           name: "beneficiary",
           type: "publicKey"
         },
         {
-          name: "deadline",
-          type: "i64"
+          name: "seed",
+          type: "string"
         }
       ]
     },
