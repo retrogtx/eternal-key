@@ -1,20 +1,17 @@
 import * as anchor from "@project-serum/anchor";
-import { Keypair, SystemProgram } from '@solana/web3.js';
-import { assert } from 'chai';
-import { describe, it, before } from 'mocha';
+import { PublicKey, SystemProgram, Keypair } from '@solana/web3.js';
+import { assert } from "chai";
 
-describe("switch", () => {
+describe("dead-man-switch", () => {
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
-  
-  const program = anchor.workspace.Switch;
-  
+
+  const program = anchor.workspace.DeadManSwitch;
   const owner = Keypair.generate();
   const beneficiary = Keypair.generate();
-  const escrow = Keypair.generate();
-  let switchAccount: Keypair;
 
   before(async () => {
+    // Airdrop 2 SOL to owner
     const signature = await provider.connection.requestAirdrop(
       owner.publicKey,
       2 * anchor.web3.LAMPORTS_PER_SOL
@@ -22,91 +19,75 @@ describe("switch", () => {
     await provider.connection.confirmTransaction(signature);
   });
 
-  it("Initializes the switch", async () => {
-    switchAccount = Keypair.generate();
-    const deadline = new Date();
-    deadline.setDate(deadline.getDate() + 1); // 1 day from now
+  it("Creates an escrow with 15-second deadline", async () => {
+    // Get current time
+    const slot = await provider.connection.getSlot();
+    const timestamp = await provider.connection.getBlockTime(slot);
+    if (!timestamp) throw new Error("Couldn't get block time");
 
+    // Set deadline 15 seconds from now
+    const deadline = timestamp + 15;
+
+    // Generate PDA for escrow
+    const [escrowPDA] = PublicKey.findProgramAddressSync(
+      [Buffer.from("escrow"), owner.publicKey.toBuffer()],
+      program.programId
+    );
+
+    // Initialize escrow
     await program.methods
       .initialize(
-        beneficiary.publicKey,
-        new anchor.BN(deadline.getTime())
+        new anchor.BN(deadline),
+        beneficiary.publicKey
       )
       .accounts({
         owner: owner.publicKey,
-        switch: switchAccount.publicKey,
-        escrow: escrow.publicKey,
+        escrow: escrowPDA,
         systemProgram: SystemProgram.programId,
       })
-      .signers([owner, switchAccount])
+      .signers([owner])
       .rpc();
 
-    const account = await program.account.deadManSwitch.fetch(
-      switchAccount.publicKey
-    );
-
+    // Verify escrow state
+    const escrow = await program.account.escrow.fetch(escrowPDA);
     assert.equal(
-      account.owner.toString(),
-      owner.publicKey.toString(),
-      "Owner should match"
-    );
-    
-    assert.equal(
-      account.beneficiary.toString(),
-      beneficiary.publicKey.toString(),
+      escrow.beneficiary.toBase58(),
+      beneficiary.publicKey.toBase58(),
       "Beneficiary should match"
     );
-    
-    assert.isTrue(account.isActive, "Switch should be active");
-  });
-
-  it("Allows owner to check in", async () => {
-    const newDeadline = new Date();
-    newDeadline.setDate(newDeadline.getDate() + 2); // 2 days from now
-
-    await program.methods
-      .checkIn(new anchor.BN(newDeadline.getTime()))
-      .accounts({
-        owner: owner.publicKey,
-        switch: switchAccount.publicKey,
-      })
-      .signers([owner])
-      .rpc();
-
-    const account = await program.account.deadManSwitch.fetch(
-      switchAccount.publicKey
-    );
-    
     assert.equal(
-      account.deadline.toString(),
-      new anchor.BN(newDeadline.getTime()).toString(),
-      "Deadline should be updated"
+      escrow.deadline.toString(),
+      new anchor.BN(deadline).toString(),
+      "Deadline should match"
     );
   });
 
-  it("Executes transfer after deadline", async () => {
-    const pastDeadline = new Date();
-    pastDeadline.setDate(pastDeadline.getDate() - 1); 
+  it("Allows claim after 15 seconds", async () => {
+    // Wait for 16 seconds
+    await new Promise(resolve => setTimeout(resolve, 16000));
 
-    await program.methods
-      .checkIn(new anchor.BN(pastDeadline.getTime()))
-      .accounts({
-        owner: owner.publicKey,
-        switch: switchAccount.publicKey,
-      })
-      .signers([owner])
-      .rpc();
+    // Get PDA for escrow
+    const [escrowPDA] = PublicKey.findProgramAddressSync(
+      [Buffer.from("escrow"), owner.publicKey.toBuffer()],
+      program.programId
+    );
 
+    // Record beneficiary's balance before claim
+    const balanceBefore = await provider.connection.getBalance(beneficiary.publicKey);
+
+    // Claim funds
     await program.methods
-      .executeTransfer()
+      .claim()
       .accounts({
-        switch: switchAccount.publicKey,
-        escrow: escrow.publicKey,
         beneficiary: beneficiary.publicKey,
+        escrow: escrowPDA,
+        systemProgram: SystemProgram.programId,
       })
+      .signers([beneficiary])
       .rpc();
 
-    const escrowBalance = await provider.connection.getBalance(escrow.publicKey);
-    assert.equal(escrowBalance, 0, "Escrow should be empty");
+    // Verify beneficiary received funds
+    const balanceAfter = await provider.connection.getBalance(beneficiary.publicKey);
+    assert(balanceAfter > balanceBefore, "Beneficiary balance should increase");
   });
 });

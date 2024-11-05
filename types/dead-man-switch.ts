@@ -1,199 +1,198 @@
-import { Idl } from '@coral-xyz/anchor';
+import { PublicKey } from '@solana/web3.js';
+import { BN } from '@coral-xyz/anchor';
 
-export type DeadManSwitchIDL = {
-  version: "0.1.0";
-  name: "dead_man_switch";
-  instructions: [
+export type DeadManSwitch = {
+  "version": "0.1.0",
+  "name": "dead_man_switch",
+  "instructions": [
     {
-      name: "createSwitch";
-      accounts: [
+      "name": "initialize",
+      "accounts": [
         {
-          name: "owner";
-          isMut: true;
-          isSigner: true;
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
         },
         {
-          name: "switch";
-          isMut: true;
-          isSigner: false;
+          "name": "escrow",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          name: "systemProgram";
-          isMut: false;
-          isSigner: false;
-        }
-      ];
-      args: [
-        {
-          name: "deadline";
-          type: "i64";
-        },
-        {
-          name: "beneficiary";
-          type: "publicKey";
-        },
-        {
-          name: "seed";
-          type: "string";
-        }
-      ];
-    },
-    {
-      name: "checkIn";
-      accounts: [
-        {
-          name: "owner";
-          isMut: false;
-          isSigner: true;
-        },
-        {
-          name: "switch";
-          isMut: true;
-          isSigner: false;
-        }
-      ];
-      args: [
-        {
-          name: "newDeadline";
-          type: "i64";
-        }
-      ];
-    },
-    {
-      name: "executeTransfer";
-      accounts: [
-        {
-          name: "switch";
-          isMut: true;
-          isSigner: false
-        },
-        {
-          name: "owner";
-          isMut: true;
-          isSigner: false
-        },
-        {
-          name: "beneficiary";
-          isMut: true;
-          isSigner: false
-        },
-        {
-          name: "systemProgram";
-          isMut: false;
-          isSigner: false
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
-      args: []
-    },
-    {
-      name: "cancelSwitch";
-      accounts: [
+      "args": [
         {
-          name: "owner";
-          isMut: true;
-          isSigner: true;
+          "name": "deadlineTimestamp",
+          "type": "i64"
         },
         {
-          name: "switch";
-          isMut: true;
-          isSigner: false;
-        }
-      ],
-      args: []
-    },
-    {
-      name: "depositFunds";
-      accounts: [
-        {
-          name: "owner";
-          isMut: true;
-          isSigner: true;
+          "name": "beneficiary",
+          "type": "publicKey"
         },
         {
-          name: "switch";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "systemProgram";
-          isMut: false;
-          isSigner: false;
-        }
-      ],
-      args: [
-        {
-          name: "amount";
-          type: "u64";
+          "name": "seed",
+          "type": "string"
         }
       ]
     },
     {
-      name: "updateActivity";
-      accounts: [
+      "name": "deposit",
+      "accounts": [
         {
-          name: "owner";
-          isMut: false;
-          isSigner: true;
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
         },
         {
-          name: "switch";
-          isMut: true;
-          isSigner: false;
+          "name": "escrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
-      args: []
-    }
-  ];
-  accounts: [
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
     {
-      name: "deadManSwitch";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "owner";
-            type: "publicKey";
-          },
-          {
-            name: "beneficiary";
-            type: "publicKey";
-          },
-          {
-            name: "deadline";
-            type: "i64";
-          },
-          {
-            name: "isActive";
-            type: "bool";
-          },
-          {
-            name: "bump",
-            type: "u8";
-          },
-          {
-            name: "seed",
-            type: "string"
-          },
-          {
-            name: "balance",
-            type: "u64"
-          },
-          {
-            name: "lastActivity",
-            type: "i64"
-          }
-        ];
-      };
+      "name": "checkin",
+      "accounts": [
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "escrow",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "newDeadline",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "claim",
+      "accounts": [
+        {
+          "name": "beneficiary",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "escrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "cancel",
+      "accounts": [
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "escrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     }
-  ];
-} & Idl;
+  ],
+  "accounts": [
+    {
+      "name": "escrow",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "beneficiary",
+            "type": "publicKey"
+          },
+          {
+            "name": "deadline",
+            "type": "i64"
+          },
+          {
+            "name": "lastCheckin",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "seed",
+            "type": "string"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidDeadline",
+      "msg": "Invalid deadline"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidAmount",
+      "msg": "Invalid amount"
+    },
+    {
+      "code": 6002,
+      "name": "DeadlineExceeded",
+      "msg": "Deadline exceeded"
+    },
+    {
+      "code": 6003,
+      "name": "DeadlineNotReached",
+      "msg": "Deadline not reached"
+    }
+  ]
+};
 
-export const IDL: DeadManSwitchIDL = {
+export const IDL: DeadManSwitch = {
   version: "0.1.0",
   name: "dead_man_switch",
   instructions: [
     {
-      name: "createSwitch",
+      name: "initialize",
       accounts: [
         {
           name: "owner",
@@ -201,7 +200,7 @@ export const IDL: DeadManSwitchIDL = {
           isSigner: true
         },
         {
-          name: "switch",
+          name: "escrow",
           isMut: true,
           isSigner: false
         },
@@ -213,7 +212,7 @@ export const IDL: DeadManSwitchIDL = {
       ],
       args: [
         {
-          name: "deadline",
+          name: "deadlineTimestamp",
           type: "i64"
         },
         {
@@ -227,54 +226,7 @@ export const IDL: DeadManSwitchIDL = {
       ]
     },
     {
-      name: "checkIn",
-      accounts: [
-        {
-          name: "owner",
-          isMut: false,
-          isSigner: true
-        },
-        {
-          name: "switch",
-          isMut: true,
-          isSigner: false
-        }
-      ],
-      args: [
-        {
-          name: "newDeadline",
-          type: "i64"
-        }
-      ]
-    },
-    {
-      name: "executeTransfer",
-      accounts: [
-        {
-          name: "switch",
-          isMut: true,
-          isSigner: false
-        },
-        {
-          name: "owner",
-          isMut: true,
-          isSigner: false
-        },
-        {
-          name: "beneficiary",
-          isMut: true,
-          isSigner: false
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false
-        }
-      ],
-      args: []
-    },
-    {
-      name: "cancelSwitch",
+      name: "deposit",
       accounts: [
         {
           name: "owner",
@@ -282,23 +234,7 @@ export const IDL: DeadManSwitchIDL = {
           isSigner: true
         },
         {
-          name: "switch",
-          isMut: true,
-          isSigner: false
-        }
-      ],
-      args: []
-    },
-    {
-      name: "depositFunds",
-      accounts: [
-        {
-          name: "owner",
-          isMut: true,
-          isSigner: true
-        },
-        {
-          name: "switch",
+          name: "escrow",
           isMut: true,
           isSigner: false
         },
@@ -316,16 +252,63 @@ export const IDL: DeadManSwitchIDL = {
       ]
     },
     {
-      name: "updateActivity",
+      name: "checkin",
       accounts: [
         {
           name: "owner",
-          isMut: false,
+          isMut: true,
           isSigner: true
         },
         {
-          name: "switch",
+          name: "escrow",
           isMut: true,
+          isSigner: false
+        }
+      ],
+      args: [
+        {
+          name: "newDeadline",
+          type: "i64"
+        }
+      ]
+    },
+    {
+      name: "claim",
+      accounts: [
+        {
+          name: "beneficiary",
+          isMut: true,
+          isSigner: true
+        },
+        {
+          name: "escrow",
+          isMut: true,
+          isSigner: false
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false
+        }
+      ],
+      args: []
+    },
+    {
+      name: "cancel",
+      accounts: [
+        {
+          name: "owner",
+          isMut: true,
+          isSigner: true
+        },
+        {
+          name: "escrow",
+          isMut: true,
+          isSigner: false
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
           isSigner: false
         }
       ],
@@ -334,7 +317,7 @@ export const IDL: DeadManSwitchIDL = {
   ],
   accounts: [
     {
-      name: "deadManSwitch",
+      name: "escrow",
       type: {
         kind: "struct",
         fields: [
@@ -351,8 +334,8 @@ export const IDL: DeadManSwitchIDL = {
             type: "i64"
           },
           {
-            name: "isActive",
-            type: "bool"
+            name: "lastCheckin",
+            type: "i64"
           },
           {
             name: "bump",
@@ -361,17 +344,48 @@ export const IDL: DeadManSwitchIDL = {
           {
             name: "seed",
             type: "string"
-          },
-          {
-            name: "balance",
-            type: "u64"
-          },
-          {
-            name: "lastActivity",
-            type: "i64"
           }
         ]
       }
     }
+  ],
+  errors: [
+    {
+      code: 6000,
+      name: "InvalidDeadline",
+      msg: "Invalid deadline"
+    },
+    {
+      code: 6001,
+      name: "InvalidAmount",
+      msg: "Invalid amount"
+    },
+    {
+      code: 6002,
+      name: "DeadlineExceeded",
+      msg: "Deadline exceeded"
+    },
+    {
+      code: 6003,
+      name: "DeadlineNotReached",
+      msg: "Deadline not reached"
+    }
   ]
-} as const; 
+};
+
+export interface EscrowAccountData {
+  owner: PublicKey;
+  beneficiary: PublicKey;
+  deadline: BN;
+  lastCheckin: BN;
+  bump: number;
+  seed: string;
+}
+
+export interface EscrowInfo {
+  pubkey: PublicKey;
+  account: EscrowAccountData;
+  timeRemaining: string;
+  balance: number;
+  isOwner: boolean;
+}
