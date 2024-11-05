@@ -60,20 +60,88 @@ export type DeadManSwitchIDL = {
       ];
     },
     {
-      name: "verifyDeadline";
+      name: "executeTransfer";
       accounts: [
+        {
+          name: "switch";
+          isMut: true;
+          isSigner: false
+        },
+        {
+          name: "owner";
+          isMut: true;
+          isSigner: false
+        },
+        {
+          name: "beneficiary";
+          isMut: true;
+          isSigner: false
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false
+        }
+      ],
+      args: []
+    },
+    {
+      name: "cancelSwitch";
+      accounts: [
+        {
+          name: "owner";
+          isMut: true;
+          isSigner: true;
+        },
+        {
+          name: "switch";
+          isMut: true;
+          isSigner: false;
+        }
+      ],
+      args: []
+    },
+    {
+      name: "depositFunds";
+      accounts: [
+        {
+          name: "owner";
+          isMut: true;
+          isSigner: true;
+        },
         {
           name: "switch";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "beneficiary";
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        }
+      ],
+      args: [
+        {
+          name: "amount";
+          type: "u64";
+        }
+      ]
+    },
+    {
+      name: "updateActivity";
+      accounts: [
+        {
+          name: "owner";
           isMut: false;
           isSigner: true;
+        },
+        {
+          name: "switch";
+          isMut: true;
+          isSigner: false;
         }
-      ];
-      args: [];
+      ],
+      args: []
     }
   ];
   accounts: [
@@ -97,6 +165,22 @@ export type DeadManSwitchIDL = {
           {
             name: "isActive";
             type: "bool";
+          },
+          {
+            name: "bump",
+            type: "u8";
+          },
+          {
+            name: "seed",
+            type: "string"
+          },
+          {
+            name: "balance",
+            type: "u64"
+          },
+          {
+            name: "lastActivity",
+            type: "i64"
           }
         ];
       };
@@ -164,7 +248,7 @@ export const IDL: DeadManSwitchIDL = {
       ]
     },
     {
-      name: "verifyDeadline",
+      name: "executeTransfer",
       accounts: [
         {
           name: "switch",
@@ -172,9 +256,77 @@ export const IDL: DeadManSwitchIDL = {
           isSigner: false
         },
         {
+          name: "owner",
+          isMut: true,
+          isSigner: false
+        },
+        {
           name: "beneficiary",
+          isMut: true,
+          isSigner: false
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false
+        }
+      ],
+      args: []
+    },
+    {
+      name: "cancelSwitch",
+      accounts: [
+        {
+          name: "owner",
+          isMut: true,
+          isSigner: true
+        },
+        {
+          name: "switch",
+          isMut: true,
+          isSigner: false
+        }
+      ],
+      args: []
+    },
+    {
+      name: "depositFunds",
+      accounts: [
+        {
+          name: "owner",
+          isMut: true,
+          isSigner: true
+        },
+        {
+          name: "switch",
+          isMut: true,
+          isSigner: false
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false
+        }
+      ],
+      args: [
+        {
+          name: "amount",
+          type: "u64"
+        }
+      ]
+    },
+    {
+      name: "updateActivity",
+      accounts: [
+        {
+          name: "owner",
           isMut: false,
           isSigner: true
+        },
+        {
+          name: "switch",
+          isMut: true,
+          isSigner: false
         }
       ],
       args: []
@@ -201,6 +353,22 @@ export const IDL: DeadManSwitchIDL = {
           {
             name: "isActive",
             type: "bool"
+          },
+          {
+            name: "bump",
+            type: "u8"
+          },
+          {
+            name: "seed",
+            type: "string"
+          },
+          {
+            name: "balance",
+            type: "u64"
+          },
+          {
+            name: "lastActivity",
+            type: "i64"
           }
         ]
       }

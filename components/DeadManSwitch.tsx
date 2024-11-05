@@ -8,16 +8,13 @@ import {
   SystemProgram, 
   Keypair,
   VersionedTransaction,
-  TransactionMessage,
   LAMPORTS_PER_SOL
 } from '@solana/web3.js';
 import { Program, AnchorProvider, BN } from '@coral-xyz/anchor';
 import { IDL } from '../types/dead-man-switch';
 
-// Update this with your actual deployed program ID
 const PROGRAM_ID = new PublicKey('8hK7vGkWap7CwfWnZG8igqz5uxevUDTbhoeuCcwgvpYq');
 
-// Create a custom wallet adapter that matches Anchor's requirements
 class CustomWallet {
   constructor(
     private _publicKey: PublicKey,
@@ -49,6 +46,29 @@ interface ProgramError {
   [key: string]: unknown;
 }
 
+// Add this interface to define the switch account type
+interface SwitchAccount {
+    publicKey: PublicKey;
+    account: {
+        owner: PublicKey;
+        beneficiary: PublicKey;
+        deadline: BN;
+        isActive: boolean;
+        bump: number;
+        seed: string;
+    };
+}
+
+// Add this interface to define the switch account data structure
+interface SwitchAccountData {
+    owner: PublicKey;
+    beneficiary: PublicKey;
+    deadline: BN;
+    isActive: boolean;
+    bump: number;
+    seed: string;
+}
+
 const DeadManSwitch: FC = () => {
   const { connection } = useConnection();
   const { publicKey, signTransaction, signAllTransactions } = useWallet();
@@ -74,6 +94,10 @@ const DeadManSwitch: FC = () => {
 
     const program = new Program(IDL, PROGRAM_ID, provider);
     setProgram(program);
+
+    // Verify program connection
+    console.log('Program ID:', PROGRAM_ID.toString());
+    console.log('Connected to program:', program.programId.toString());
   }, [publicKey, connection, signTransaction, signAllTransactions]);
 
   const activateSwitch = async (days: number, minutes: number = 0) => {
@@ -83,10 +107,19 @@ const DeadManSwitch: FC = () => {
     }
 
     try {
-      // Create switch account with seed to ensure uniqueness
+      const balance = await connection.getBalance(publicKey);
+      if (balance < LAMPORTS_PER_SOL) {
+        alert(`Insufficient funds. You need at least 1 SOL. Current balance: ${balance / LAMPORTS_PER_SOL} SOL`);
+        return;
+      }
+
       const seed = new Date().getTime().toString();
       const [switchPubkey] = PublicKey.findProgramAddressSync(
-        [Buffer.from(seed), publicKey.toBuffer()],
+        [
+          Buffer.from("switch"), 
+          publicKey.toBuffer(),
+          Buffer.from(seed)
+        ],
         PROGRAM_ID
       );
 
@@ -94,10 +127,12 @@ const DeadManSwitch: FC = () => {
       newTargetTime.setDate(newTargetTime.getDate() + days);
       newTargetTime.setMinutes(newTargetTime.getMinutes() + minutes);
 
-      const { blockhash } = await connection.getLatestBlockhash();
+      console.log('Creating switch account:', switchPubkey.toString());
+      console.log('Owner:', publicKey.toString());
+      console.log('Beneficiary:', beneficiaryAddress);
 
-      // Create switch account using PDA
-      const createSwitchAccountIx = await program.methods
+      // Create switch and lock funds
+      const tx = await program.methods
         .createSwitch(
           new BN(newTargetTime.getTime() / 1000),
           new PublicKey(beneficiaryAddress),
@@ -108,25 +143,10 @@ const DeadManSwitch: FC = () => {
           switch: switchPubkey,
           systemProgram: SystemProgram.programId,
         })
-        .instruction();
+        .rpc();
 
-      // Transfer SOL to beneficiary
-      const transferIx = SystemProgram.transfer({
-        fromPubkey: publicKey,
-        toPubkey: new PublicKey(beneficiaryAddress),
-        lamports: LAMPORTS_PER_SOL
-      });
-
-      const messageV0 = new TransactionMessage({
-        payerKey: publicKey,
-        recentBlockhash: blockhash,
-        instructions: [createSwitchAccountIx, transferIx]
-      }).compileToV0Message();
-
-      const transaction = new VersionedTransaction(messageV0);
-      const signedTransaction = await signTransaction(transaction);
-      const signature = await connection.sendRawTransaction(signedTransaction.serialize());
-      await connection.confirmTransaction(signature);
+      console.log('Switch created:', tx);
+      await checkSwitchBalance(switchPubkey);
 
       setTargetTime(newTargetTime);
       setIsActive(true);
@@ -135,9 +155,11 @@ const DeadManSwitch: FC = () => {
         targetTime: newTargetTime.toISOString(),
         beneficiaryAddress,
         isActive: true,
-        switchPublicKey: switchPubkey.toString()
+        switchPublicKey: switchPubkey.toString(),
+        seed: seed
       }));
 
+      alert(`1 SOL locked in switch. Will transfer to ${beneficiaryAddress} if you don't check in within ${days} days and ${minutes} minutes.`);
     } catch (error: unknown) {
       const programError = error as ProgramError;
       console.error('Detailed error:', programError);
@@ -163,24 +185,150 @@ const DeadManSwitch: FC = () => {
     if (!targetTime || !isActive) return;
 
     const interval = setInterval(() => {
-      const now = new Date();
-      const diff = targetTime.getTime() - now.getTime();
+        const now = new Date();
+        const diff = targetTime.getTime() - now.getTime();
 
-      if (diff <= 0) {
-        setTimeRemaining('Time expired');
-        setIsActive(false);
-        clearInterval(interval);
-      } else {
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-        setTimeRemaining(`${days}d ${hours}h ${minutes}m ${seconds}s`);
-      }
+        if (diff <= 0) {
+            setTimeRemaining('Transfer in progress...');
+            setIsActive(false);
+            clearInterval(interval);
+        } else {
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            setTimeRemaining(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+        }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [targetTime, isActive]);
+}, [targetTime, isActive]);
+
+  const cancelSwitch = async () => {
+    if (!program || !publicKey) return;
+
+    try {
+        const switchData = JSON.parse(localStorage.getItem('deadManSwitch') || '{}');
+        
+        if (!switchData.switchPublicKey) {
+            console.error('No active switch found');
+            return;
+        }
+
+        await program.methods
+            .cancelSwitch()
+            .accounts({
+                owner: publicKey,
+                switch: new PublicKey(switchData.switchPublicKey),
+            })
+            .rpc();
+
+        setIsActive(false);
+        setTargetTime(null);
+        localStorage.removeItem('deadManSwitch');
+        alert('Switch cancelled successfully');
+    } catch (error) {
+        console.error('Error cancelling switch:', error);
+        alert('Failed to cancel switch');
+    }
+};
+
+  useEffect(() => {
+    if (!program || !publicKey || !connection) return;
+
+    const checkDeadline = async () => {
+        try {
+            const accounts = await connection.getProgramAccounts(PROGRAM_ID, {
+                filters: [
+                    {
+                        memcmp: {
+                            offset: 8,
+                            bytes: publicKey.toBase58()
+                        }
+                    }
+                ]
+            });
+
+            for (const account of accounts) {
+                try {
+                    // Properly type the fetched account data
+                    const switchAccount = await program.account.deadManSwitch.fetch(
+                        account.pubkey
+                    ) as SwitchAccountData;
+
+                    if (switchAccount.isActive) {
+                        const now = new Date().getTime() / 1000;
+                        
+                        if (now >= switchAccount.deadline.toNumber()) {
+                            console.log('Executing transfer for switch:', account.pubkey.toString());
+                            
+                            await program.methods
+                                .executeTransfer()
+                                .accounts({
+                                    switch: account.pubkey,
+                                    owner: switchAccount.owner.toBase58(),  // Now TypeScript knows this is a PublicKey
+                                    beneficiary: switchAccount.beneficiary.toBase58(),  // Now TypeScript knows this is a PublicKey
+                                    systemProgram: SystemProgram.programId,
+                                })
+                                .rpc();
+
+                            console.log('Transfer executed successfully');
+                        }
+                    }
+                } catch (err) {
+                    console.error('Error processing account:', err);
+                }
+            }
+        } catch (error) {
+            console.error('Error checking switches:', error);
+        }
+    };
+
+    const interval = setInterval(checkDeadline, 30000);
+    return () => clearInterval(interval);
+}, [program, publicKey, connection]);
+
+  // Move checkSwitchBalance here
+  const checkSwitchBalance = async (switchPubkey: PublicKey) => {
+    if (!connection) return;
+    
+    const balance = await connection.getBalance(switchPubkey);
+    console.log('Switch Account:', switchPubkey.toString());
+    console.log('Switch Balance:', balance / LAMPORTS_PER_SOL, 'SOL');
+    return balance;
+  };
+
+  const forceExecuteTransfer = async () => {
+    if (!program || !publicKey || !connection) return;
+
+    try {
+        const switchData = JSON.parse(localStorage.getItem('deadManSwitch') || '{}');
+        const switchPubkey = new PublicKey(switchData.switchPublicKey);
+
+        console.log('Switch Account:', switchPubkey.toString());
+        const beforeBalance = await connection.getBalance(switchPubkey);
+        console.log('Switch Balance Before:', beforeBalance / LAMPORTS_PER_SOL, 'SOL');
+
+        await program.methods
+            .executeTransfer()
+            .accounts({
+                switch: switchPubkey,
+                owner: publicKey,
+                beneficiary: new PublicKey(beneficiaryAddress),
+                systemProgram: SystemProgram.programId,
+            })
+            .rpc();
+
+        const afterBalance = await connection.getBalance(switchPubkey);
+        console.log('Switch Balance After:', afterBalance / LAMPORTS_PER_SOL, 'SOL');
+        
+        const beneficiaryBalance = await connection.getBalance(new PublicKey(beneficiaryAddress));
+        console.log('Beneficiary Balance:', beneficiaryBalance / LAMPORTS_PER_SOL, 'SOL');
+
+    } catch (error) {
+        console.error('Error:', error);
+    }
+};
 
   return (
     <div className="p-8 max-w-2xl mx-auto">
@@ -242,6 +390,18 @@ const DeadManSwitch: FC = () => {
                 <h3 className="text-xl mb-2">Switch Active</h3>
                 <p className="text-2xl font-mono">{timeRemaining}</p>
               </div>
+              <button
+                onClick={cancelSwitch}
+                className="bg-red-500 text-white px-4 py-2 rounded w-full mt-4"
+              >
+                Cancel Switch
+              </button>
+              <button
+                onClick={forceExecuteTransfer}
+                className="bg-red-500 text-white px-4 py-2 rounded w-full mt-2"
+              >
+                Force Execute Transfer
+              </button>
             </div>
           )}
         </div>
