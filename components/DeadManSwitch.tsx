@@ -208,12 +208,14 @@ const DeadManSwitch: FC = () => {
         PROGRAM_ID
       );
 
-      console.log('Creating escrow with params:', {
-        deadline,
-        beneficiary: beneficiaryAddress,
-        timeUntilDeadline: `${seconds} seconds`,
-        seed,
-        escrowPDA: escrowPDA.toString()
+      toast.info('Creating escrow with params:', {
+        description: JSON.stringify({
+          deadline,
+          beneficiary: beneficiaryAddress,
+          timeUntilDeadline: `${seconds} seconds`,
+          seed,
+          escrowPDA: escrowPDA.toString()
+        }, null, 2)
       });
 
       await program.methods
@@ -445,23 +447,25 @@ const DeadManSwitch: FC = () => {
                           </Button>
                         ) : (
                           <>
-                            <Button
-                              onClick={() => handleCheckIn(escrow.pubkey)}
-                              variant="secondary"
-                              size="lg"
-                              className="w-32"
-                            >
-                              Check In
-                            </Button>
-                            
-                            <Button
-                              onClick={() => cancelEscrow(escrow.pubkey)}
-                              variant="destructive"
-                              size="lg"
-                              className="w-32"
-                            >
-                              Cancel
-                            </Button>
+                            <div className="flex gap-3">
+                              <Button
+                                onClick={() => handleCheckIn(escrow.pubkey)}
+                                variant="secondary"
+                                size="lg"
+                                className="w-32"
+                              >
+                                Check In
+                              </Button>
+                              
+                              <Button
+                                onClick={() => cancelEscrow(escrow.pubkey)}
+                                variant="destructive"
+                                size="lg"
+                                className="w-32"
+                              >
+                                Cancel
+                              </Button>
+                            </div>
                           </>
                         )}
                       </div>
@@ -475,21 +479,21 @@ const DeadManSwitch: FC = () => {
           {/* Quick Actions */}
           <div className="flex gap-4">
             <Button
-              onClick={() => activateSwitch(15)} // 15 seconds
+              onClick={() => activateSwitch(15)}
               variant="secondary"
               size="lg"
               className="flex-1"
             >
-              Create 15s Timer
+              15s Timer for testing
             </Button>
             
             <Button
-              onClick={() => activateSwitch(30)} // 30 seconds
+              onClick={() => activateSwitch(30)}
               variant="secondary"
               size="lg"
               className="flex-1"
             >
-              Create 30s Timer
+              30s Timer for testing
             </Button>
           </div>
         </div>
