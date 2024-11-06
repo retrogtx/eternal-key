@@ -12,6 +12,7 @@ import {
 import { Program, AnchorProvider, BN } from '@coral-xyz/anchor';
 import { IDL } from '../types/dead-man-switch';
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 const PROGRAM_ID = new PublicKey('8hK7vGkWap7CwfWnZG8igqz5uxevUDTbhoeuCcwgvpYq');
 
@@ -249,13 +250,15 @@ const DeadManSwitch: FC = () => {
   };
 
   const handleCustomTimer = () => {
-    const seconds = parseInt(customDays) || 0;
+    const minutes = parseInt(customDays) || 0;
     
-    if (seconds === 0) {
+    if (minutes === 0) {
       toast.error('Please enter a valid time period');
       return;
     }
     
+    // Convert minutes to seconds
+    const seconds = minutes * 60;
     activateSwitch(seconds);
     setCustomDays('');
   };
@@ -344,29 +347,28 @@ const DeadManSwitch: FC = () => {
           </div>
 
           {/* Create New Escrow Section */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Create New Escrow</h3>
+          <div className="bg-white/5 backdrop-blur-lg rounded-xl p-8 shadow-lg border border-white/10">
+            <h3 className="text-xl font-semibold text-white mb-6">Create New Escrow</h3>
             
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-gray-200 mb-2">
                   Beneficiary Address
                 </label>
                 <input
                   type="text"
                   value={beneficiaryAddress}
                   onChange={(e) => setBeneficiaryAddress(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
-                           bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100
-                           focus:ring-2 focus:ring-purple-500 focus:border-transparent
-                           placeholder-gray-400 dark:placeholder-gray-500"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg 
+                           text-white placeholder-gray-400 focus:ring-2 focus:ring-primary/50
+                           focus:border-primary transition-all duration-200"
                   placeholder="Enter Solana address"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Timer Duration (seconds)
+                <label className="block text-sm font-medium text-gray-200 mb-2">
+                  Timer Duration (minutes)
                 </label>
                 <div className="flex gap-4">
                   <input
@@ -374,118 +376,121 @@ const DeadManSwitch: FC = () => {
                     min="0"
                     value={customDays}
                     onChange={(e) => setCustomDays(e.target.value)}
-                    className="w-32 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
-                             bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100
-                             focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="Seconds"
+                    className="w-40 px-4 py-3 bg-white/5 border border-white/10 rounded-lg
+                             text-white placeholder-gray-400 focus:ring-2 focus:ring-primary/50
+                             focus:border-primary transition-all duration-200"
+                    placeholder="Minutes"
                   />
-                  <button
-                    onClick={handleCustomTimer}
-                    className="flex-1 bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg
-                             transition-colors duration-200 font-medium"
+                  <Button
+                    onClick={() => handleCustomTimer()}
+                    variant="default"
+                    size="lg"
+                    className="flex-1 bg-white text-gray-900 hover:bg-gray-100"
                   >
                     Create Custom Timer
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Active Escrows Section */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-            <div className="p-6">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Your Escrows</h3>
-              
-              {escrows.length === 0 ? (
-                <p className="text-gray-500 dark:text-gray-400">No escrows found</p>
-              ) : (
-                <div className="space-y-4">
-                  {escrows.map((escrow) => (
-                    <div 
-                      key={escrow.pubkey.toString()} 
-                      className="border border-gray-200 dark:border-gray-700 rounded-xl p-6
-                               bg-gray-50 dark:bg-gray-900"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-3">
-                            <h4 className="font-semibold text-gray-900 dark:text-white">Escrow</h4>
-                            <StatusBadge deadline={escrow.account.deadline} />
-                          </div>
-                          
-                          <div className="space-y-2 text-sm">
-                            <p className="text-gray-600 dark:text-gray-400">
-                              <span className="font-medium">Beneficiary:</span> {escrow.account.beneficiary.toString()}
-                            </p>
-                            <p className="text-gray-600 dark:text-gray-400">
-                              <span className="font-medium">Balance:</span> {formatSolBalance(escrow.balance)}
-                            </p>
-                            <p className="text-gray-600 dark:text-gray-400">
-                              <span className="font-medium">Last Check-in:</span> {new Date(escrow.account.lastCheckin.toNumber() * 1000).toLocaleString()}
-                            </p>
-                            <p className="text-gray-600 dark:text-gray-400">
-                              <span className="font-medium">Deadline:</span> {new Date(escrow.account.deadline.toNumber() * 1000).toLocaleString()}
-                            </p>
-                            <p className="font-medium text-gray-900 dark:text-white">
-                              Time Remaining: {escrow.timeRemaining}
-                            </p>
-                          </div>
+          <div className="bg-white/5 backdrop-blur-lg rounded-xl p-8 shadow-lg border border-white/10">
+            <h3 className="text-xl font-semibold text-white mb-6">Your Escrows</h3>
+            
+            {escrows.length === 0 ? (
+              <p className="text-gray-400">No escrows found</p>
+            ) : (
+              <div className="space-y-6">
+                {escrows.map((escrow) => (
+                  <div 
+                    key={escrow.pubkey.toString()} 
+                    className="bg-white/5 backdrop-blur rounded-lg p-6 border border-white/10"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                          <h4 className="font-semibold text-white">Escrow</h4>
+                          <StatusBadge deadline={escrow.account.deadline} />
                         </div>
                         
-                        <div className="space-y-3">
-                          {escrow.account.deadline.toNumber() <= Date.now() / 1000 ? (
-                            <button
-                              onClick={() => claimEscrow(escrow.pubkey, escrow.account.beneficiary)}
-                              className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg
-                                       transition-colors duration-200 font-medium w-32"
-                            >
-                              Claim
-                            </button>
-                          ) : (
-                            <>
-                              <button
-                                onClick={() => handleCheckIn(escrow.pubkey)}
-                                className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg
-                                         transition-colors duration-200 font-medium w-32"
-                              >
-                                Check In
-                              </button>
-                              
-                              <button
-                                onClick={() => cancelEscrow(escrow.pubkey)}
-                                className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg
-                                         transition-colors duration-200 font-medium w-32"
-                              >
-                                Cancel
-                              </button>
-                            </>
-                          )}
+                        <div className="space-y-2 text-sm">
+                          <p className="text-gray-300">
+                            <span className="text-gray-400">Beneficiary:</span> {escrow.account.beneficiary.toString()}
+                          </p>
+                          <p className="text-gray-300">
+                            <span className="text-gray-400">Balance:</span> {formatSolBalance(escrow.balance)}
+                          </p>
+                          <p className="text-gray-300">
+                            <span className="text-gray-400">Last Check-in:</span> {new Date(escrow.account.lastCheckin.toNumber() * 1000).toLocaleString()}
+                          </p>
+                          <p className="text-gray-300">
+                            <span className="text-gray-400">Deadline:</span> {new Date(escrow.account.deadline.toNumber() * 1000).toLocaleString()}
+                          </p>
+                          <p className="text-white font-medium">
+                            Time Remaining: {escrow.timeRemaining}
+                          </p>
                         </div>
                       </div>
+                      
+                      <div className="space-y-3">
+                        {escrow.account.deadline.toNumber() <= Date.now() / 1000 ? (
+                          <Button
+                            onClick={() => claimEscrow(escrow.pubkey, escrow.account.beneficiary)}
+                            variant="default"
+                            size="lg"
+                            className="w-32"
+                          >
+                            Claim
+                          </Button>
+                        ) : (
+                          <>
+                            <Button
+                              onClick={() => handleCheckIn(escrow.pubkey)}
+                              variant="secondary"
+                              size="lg"
+                              className="w-32"
+                            >
+                              Check In
+                            </Button>
+                            
+                            <Button
+                              onClick={() => cancelEscrow(escrow.pubkey)}
+                              variant="destructive"
+                              size="lg"
+                              className="w-32"
+                            >
+                              Cancel
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Quick Actions */}
           <div className="flex gap-4">
-            <button
-              onClick={() => activateSwitch(15)}
-              className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg
-                       transition-colors duration-200 font-medium"
+            <Button
+              onClick={() => activateSwitch(15)} // 15 seconds
+              variant="secondary"
+              size="lg"
+              className="flex-1"
             >
-              Create 15s Test Switch
-            </button>
+              Create 15s Timer
+            </Button>
             
-            <button
-              onClick={() => activateSwitch(30)}
-              className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg
-                       transition-colors duration-200 font-medium"
+            <Button
+              onClick={() => activateSwitch(30)} // 30 seconds
+              variant="secondary"
+              size="lg"
+              className="flex-1"
             >
-              Create 30s Test Switch
-            </button>
+              Create 30s Timer
+            </Button>
           </div>
         </div>
       )}
