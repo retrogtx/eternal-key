@@ -9,10 +9,7 @@ const WalletConnectionProvider = dynamic(
   { ssr: false }
 );
 
-const HomePage = dynamic(
-  () => import('@/components/HomePage'),
-  { ssr: false }
-);
+import HomePage from '@/components/HomePage';
 
 const Home: FC = () => {
   return (
