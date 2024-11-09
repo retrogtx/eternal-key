@@ -12,6 +12,7 @@
   "dependencies": {
     "@coral-xyz/anchor": "^0.28.0",
     "@project-serum/anchor": "^0.26.0",
+    "@radix-ui/react-accordion": "^1.2.1",
     "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/react-toast": "^1.2.2",
     "@solana/wallet-adapter-base": "^0.9.23",
