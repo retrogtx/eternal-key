@@ -3,6 +3,7 @@
 import React, { FC } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import dynamic from 'next/dynamic';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 
 const WalletMultiButton = dynamic(
   () => import('@solana/wallet-adapter-react-ui').then((mod) => mod.WalletMultiButton),
@@ -78,6 +79,42 @@ const HomePage: FC = () => {
                   </p>
                 </div>
               ))}
+            </div>
+
+            {/* FAQ Section */}
+            <div className="mt-16 max-w-2xl mx-auto text-left">
+              <h2 className="text-2xl font-bold text-white mb-6 text-center">Frequently Asked Questions</h2>
+              <Accordion type="single" collapsible className="w-full space-y-4">
+                <AccordionItem value="item-1" className="border-none bg-zinc-900/50 rounded-lg px-4">
+                  <AccordionTrigger className="hover:no-underline text-white py-4">
+                    How does Eternal Key work?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-zinc-400 pb-4">
+                    Eternal Key uses smart contracts on the Solana blockchain to create a secure, automated inheritance system. 
+                    Set up automatic transfers that trigger if you don&apos;t check in within your specified timeframe.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="item-2" className="border-none bg-zinc-900/50 rounded-lg px-4">
+                  <AccordionTrigger className="hover:no-underline text-white py-4">
+                    What happens to my assets?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-zinc-400 pb-4">
+                    Your assets remain securely locked in the smart contract until either you miss a check-in deadline or you choose to withdraw them. 
+                    You maintain full control over your assets while the switch is active.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="item-3" className="border-none bg-zinc-900/50 rounded-lg px-4">
+                  <AccordionTrigger className="hover:no-underline text-white py-4">
+                    Is the service secure?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-zinc-400 pb-4">
+                    Yes, our service is built on Solana&apos;s blockchain technology, ensuring maximum security and transparency. 
+                    All transactions and rules are enforced by smart contracts, making the process completely trustless and automated.
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </div>
 
             {/* Trust Indicators */}
