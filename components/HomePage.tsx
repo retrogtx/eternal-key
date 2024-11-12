@@ -114,6 +114,16 @@ const HomePage: FC = () => {
                     All transactions and rules are enforced by smart contracts, making the process completely trustless and automated.
                   </AccordionContent>
                 </AccordionItem>
+
+                <AccordionItem value="item-4" className="border-none bg-zinc-900/50 rounded-lg px-4">
+                  <AccordionTrigger className="hover:no-underline text-white py-4">
+                    How do I get started?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-zinc-400 pb-4">
+                    Getting started is simple: 1) Connect your Solana wallet, 2) Create a new switch by specifying your beneficiary&apos;s wallet address, 
+                    3) Create the escrow account 4) Give wallet perimissions to transfer 1 SOL (we kept it low & on devnet for testing purposes for now) 5. Wait for the time to pass. 6. Login with the beneficiary account to receive SOL.
+                  </AccordionContent>
+                </AccordionItem>
               </Accordion>
             </div>
 
