@@ -265,17 +265,31 @@ const DeadManSwitch: FC = () => {
 
   // Add this function to handle the date selection and switch activation
   const handleDateSelection = async () => {
+    // Validate beneficiary address first
+    if (!beneficiaryAddress || beneficiaryAddress.trim() === '') {
+      toast.error('Please enter a beneficiary address');
+      return;
+    }
+
+    // Validate date selection
     if (!selectedDate) {
       toast.error('Please select a deadline date');
       return;
     }
 
+    // Validate duration
     if (duration <= 0) {
       toast.error('Selected date must be in the future');
       return;
     }
 
-    // Convert minutes to seconds for the smart contract
+    // Validate beneficiary address format
+    if (!PublicKey.isOnCurve(beneficiaryAddress)) {
+      toast.error('Invalid beneficiary address format');
+      return;
+    }
+
+    // If all validations pass, proceed with switch activation
     const seconds = duration * 60;
     await activateSwitch(seconds);
     setSelectedDate(undefined); // Reset the date picker after activation
