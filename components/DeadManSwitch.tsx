@@ -13,6 +13,8 @@ import { Program, AnchorProvider, BN } from '@coral-xyz/anchor';
 import { IDL } from '../types/dead-man-switch';
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { CustomDatePickerComponent } from './custom-date-picker';
+import { differenceInMinutes } from 'date-fns';
 
 const PROGRAM_ID = new PublicKey('8hK7vGkWap7CwfWnZG8igqz5uxevUDTbhoeuCcwgvpYq');
 
@@ -59,7 +61,8 @@ const DeadManSwitch: FC = () => {
   const [program, setProgram] = useState<Program<typeof IDL> | null>(null);
   const [escrows, setEscrows] = useState<EscrowInfo[]>([]);
   const [beneficiaryAddress, setBeneficiaryAddress] = useState<string>('');
-  const [customDays, setCustomDays] = useState<string>('');
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [duration, setDuration] = useState<number>(0);
 
   // Initialize the program when wallet connects
   useEffect(() => {
@@ -82,6 +85,15 @@ const DeadManSwitch: FC = () => {
       fetchEscrows();
     }
   }, [program, publicKey, connection]);
+
+  // Add this useEffect to update duration when date changes
+  useEffect(() => {
+    if (selectedDate) {
+      const now = new Date();
+      const diffInMinutes = differenceInMinutes(selectedDate, now);
+      setDuration(diffInMinutes > 0 ? diffInMinutes : 0);
+    }
+  }, [selectedDate]);
 
   const formatTimeRemaining = (deadline: number) => {
     const now = Date.now() / 1000;
@@ -251,18 +263,22 @@ const DeadManSwitch: FC = () => {
     }
   };
 
-  const handleCustomTimer = () => {
-    const minutes = parseInt(customDays) || 0;
-    
-    if (minutes === 0) {
-      toast.error('Please enter a valid time period');
+  // Add this function to handle the date selection and switch activation
+  const handleDateSelection = async () => {
+    if (!selectedDate) {
+      toast.error('Please select a deadline date');
       return;
     }
-    
-    // Convert minutes to seconds
-    const seconds = minutes * 60;
-    activateSwitch(seconds);
-    setCustomDays('');
+
+    if (duration <= 0) {
+      toast.error('Selected date must be in the future');
+      return;
+    }
+
+    // Convert minutes to seconds for the smart contract
+    const seconds = duration * 60;
+    await activateSwitch(seconds);
+    setSelectedDate(undefined); // Reset the date picker after activation
   };
 
   // Update handleCheckIn to refresh after check-in
@@ -368,30 +384,28 @@ const DeadManSwitch: FC = () => {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-200 mb-2">
-                  Timer Duration (minutes)
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-zinc-200">
+                  Select Deadline Date
                 </label>
-                <div className="flex gap-4">
-                  <input
-                    type="number"
-                    min="0"
-                    value={customDays}
-                    onChange={(e) => setCustomDays(e.target.value)}
-                    className="w-40 px-4 py-3 bg-white/5 border border-white/10 rounded-lg
-                             text-white placeholder-gray-400 focus:ring-2 focus:ring-primary/50
-                             focus:border-primary transition-all duration-200"
-                    placeholder="Minutes"
-                  />
-                  <Button
-                    onClick={() => handleCustomTimer()}
-                    variant="default"
-                    size="lg"
-                    className="flex-1 bg-white text-gray-900 hover:bg-gray-100"
-                  >
-                    Create Custom Timer
-                  </Button>
-                </div>
+                <CustomDatePickerComponent 
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                />
+                {duration > 0 && (
+                  <p className="text-sm text-zinc-400 mt-2">
+                    Duration: {duration} minutes
+                  </p>
+                )}
+                <Button
+                  onClick={handleDateSelection}
+                  variant="default"
+                  size="lg"
+                  className="w-full mt-4"
+                  disabled={!selectedDate || duration <= 0}
+                >
+                  Create Switch
+                </Button>
               </div>
             </div>
           </div>
