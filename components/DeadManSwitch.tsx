@@ -13,8 +13,9 @@ import { Program, AnchorProvider, BN } from '@coral-xyz/anchor';
 import { IDL } from '../types/dead-man-switch';
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { CustomDatePickerComponent } from './custom-date-picker';
+import { DatePickerDemo } from './custom-date-picker';
 import { differenceInMinutes } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 const PROGRAM_ID = new PublicKey('8hK7vGkWap7CwfWnZG8igqz5uxevUDTbhoeuCcwgvpYq');
 
@@ -192,7 +193,9 @@ const DeadManSwitch: FC = () => {
   // Update activateSwitch to refresh escrows after creation
   const activateSwitch = async (seconds: number) => {
     if (!beneficiaryAddress || !program || !publicKey || !connection) {
-      console.error('Missing required parameters');
+      toast.error('Missing required parameters', {
+        description: 'Please fill all required fields'
+      });
       return;
     }
 
@@ -402,7 +405,7 @@ const DeadManSwitch: FC = () => {
                 <label className="block text-sm font-medium text-zinc-200">
                   Select Deadline Date
                 </label>
-                <CustomDatePickerComponent 
+                <DatePickerDemo 
                   selected={selectedDate}
                   onSelect={setSelectedDate}
                 />
@@ -415,10 +418,35 @@ const DeadManSwitch: FC = () => {
                   onClick={handleDateSelection}
                   variant="default"
                   size="lg"
-                  className="w-full mt-4"
+                  className={cn(
+                    "w-full mt-4 bg-gradient-to-r from-gray-500 to-gray-600",
+                    "hover:from-gray-600 hover:to-gray-700",
+                    "shadow-lg hover:shadow-gray-500/25",
+                    "border border-white/10",
+                    "transition-all duration-300 ease-out",
+                    "font-semibold text-base",
+                    "disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed",
+                    "group relative overflow-hidden"
+                  )}
                   disabled={!selectedDate || duration <= 0}
                 >
-                  Create Switch
+                  <span className="relative z-10 flex items-center justify-center gap-2">
+                    <span>Create Switch</span>
+                    <svg 
+                      className="w-5 h-5 transition-transform group-hover:translate-x-1" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M13 7l5 5m0 0l-5 5m5-5H6"
+                      />
+                    </svg>
+                  </span>
+                  <div className="absolute inset-0 bg-white/10 group-hover:bg-white/20 transition-colors duration-300" />
                 </Button>
               </div>
             </div>
