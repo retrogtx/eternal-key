@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/react"
+import '@solana/wallet-adapter-react-ui/styles.css';
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
