@@ -56,7 +56,6 @@ interface EscrowInfo {
   isOwner: boolean;
 }
 
-// Add these interfaces
 interface ExtendDuration {
   days: number;
   months: number;
@@ -76,6 +75,7 @@ const DeadManSwitch: FC = () => {
     months: 0,
     years: 0
   });
+  const [depositAmount, setDepositAmount] = useState<number>(1);
 
   // Initialize the program when wallet connects
   useEffect(() => {
@@ -202,7 +202,7 @@ const DeadManSwitch: FC = () => {
     );
   };
 
-  // Update activateSwitch to refresh escrows after creation
+  // Update activateSwitch to use the custom amount
   const activateSwitch = async (seconds: number) => {
     if (!program || !publicKey || !connection) {
       toast.error('Please connect your wallet first');
@@ -212,8 +212,10 @@ const DeadManSwitch: FC = () => {
     try {
       // Check wallet balance first
       const balance = await connection.getBalance(publicKey);
-      if (balance < LAMPORTS_PER_SOL) {
-        toast.error(`Insufficient funds. You need at least 1 SOL. Current balance: ${balance / LAMPORTS_PER_SOL} SOL`);
+      const amountInLamports = depositAmount * LAMPORTS_PER_SOL;
+      
+      if (balance < amountInLamports) {
+        toast.error(`Insufficient funds. You need at least ${depositAmount} SOL. Current balance: ${(balance / LAMPORTS_PER_SOL).toFixed(2)} SOL`);
         return;
       }
 
@@ -222,21 +224,17 @@ const DeadManSwitch: FC = () => {
       const currentTime = await connection.getBlockTime(slot);
       if (!currentTime) throw new Error("Couldn't get block time");
 
-      // Set deadline seconds from now
       const deadline = currentTime + seconds;
-
-      // Generate unique seed
       const seed = new Date().getTime().toString();
 
-      // Generate PDA for escrow
       const [escrowPDA] = PublicKey.findProgramAddressSync(
         [Buffer.from("escrow"), publicKey.toBuffer(), Buffer.from(seed)],
         PROGRAM_ID
       );
 
-      // Add a toast to show transaction is pending
-      toast.info('Please approve the transaction in your wallet');
+      toast.info('Please approve the transactions in your wallet');
 
+      // Initialize escrow
       await program.methods
         .initialize(
           new BN(deadline),
@@ -252,7 +250,7 @@ const DeadManSwitch: FC = () => {
 
       // Deposit funds
       await program.methods
-        .deposit(new BN(LAMPORTS_PER_SOL))
+        .deposit(new BN(amountInLamports))
         .accounts({
           owner: publicKey,
           escrow: escrowPDA,
@@ -260,7 +258,6 @@ const DeadManSwitch: FC = () => {
         })
         .rpc();
 
-      // Refresh escrows after successful creation
       await fetchEscrows();
       toast.success('Escrow created successfully');
 
@@ -484,9 +481,25 @@ const DeadManSwitch: FC = () => {
                   value={beneficiaryAddress}
                   onChange={(e) => setBeneficiaryAddress(e.target.value)}
                   className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg 
-                           text-white placeholder-gray-400 focus:ring-2 focus:ring-primary/50
-                           focus:border-primary transition-all duration-200"
+                           text-white placeholder-gray-400 focus:ring-2 focus:ring-primary/50"
                   placeholder="Enter Solana address"
+                />
+              </div>
+
+              {/* Add Amount Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-2">
+                  Amount (SOL)
+                </label>
+                <input
+                  type="number"
+                  min="0.1"
+                  step="0.1"
+                  value={depositAmount}
+                  onChange={(e) => setDepositAmount(Number(e.target.value))}
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg 
+                           text-white placeholder-gray-400 focus:ring-2 focus:ring-primary/50"
+                  placeholder="Enter amount in SOL"
                 />
               </div>
 
