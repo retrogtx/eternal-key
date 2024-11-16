@@ -346,7 +346,7 @@ const DeadManSwitch: FC = () => {
         .rpc();
 
       await fetchEscrows();
-      toast.success('Escrow cancelled successfully');
+      toast.success('Escrow cancelled successfully. Funds returned.');
     } catch (error) {
       console.error('Error cancelling escrow:', error);
       toast.error('Failed to cancel escrow. See console for details.');
@@ -563,16 +563,50 @@ const DeadManSwitch: FC = () => {
                       </div>
                       
                       <div className="space-y-4">
-                        {escrow.account.deadline.toNumber() <= Date.now() / 1000 ? (
+                        {escrow.account.beneficiary.toString() === publicKey?.toString() ? (
                           <Button
-                            onClick={() => claimEscrow(escrow.pubkey, escrow.account.beneficiary)}
+                            onClick={() => {
+                              if (escrow.account.deadline.toNumber() <= Date.now() / 1000) {
+                                claimEscrow(escrow.pubkey, escrow.account.beneficiary);
+                              } else {
+                                toast.error(`Cannot claim yet. Time remaining: ${escrow.timeRemaining}`);
+                              }
+                            }}
                             variant="default"
                             size="lg"
-                            className="w-32 bg-green-600 hover:bg-green-700"
+                            className={cn(
+                              "w-32 bg-gradient-to-r",
+                              escrow.account.deadline.toNumber() <= Date.now() / 1000
+                                ? "from-gray-300 to-gray-400 hover:from-gray-400 hover:to-gray-500"
+                                : "from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700",
+                              "shadow-lg hover:shadow-gray-500/25",
+                              "border border-white/10",
+                              "transition-all duration-300 ease-out",
+                              "font-semibold text-base",
+                              "group relative overflow-hidden"
+                            )}
                           >
-                            Claim
+                            <span className="relative z-10 flex items-center justify-center gap-2">
+                              <span>Claim</span>
+                              {escrow.account.deadline.toNumber() <= Date.now() / 1000 && (
+                                <svg 
+                                  className="w-5 h-5 transition-transform group-hover:translate-x-1" 
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path 
+                                    strokeLinecap="round" 
+                                    strokeLinejoin="round" 
+                                    strokeWidth={2} 
+                                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                                  />
+                                </svg>
+                              )}
+                            </span>
+                            <div className="absolute inset-0 bg-white/10 group-hover:bg-white/20 transition-colors duration-300" />
                           </Button>
-                        ) : (
+                        ) : escrow.account.owner.toString() === publicKey?.toString() && (
                           <>
                             <DurationInputs
                               duration={extendDuration}
@@ -581,21 +615,70 @@ const DeadManSwitch: FC = () => {
                             <div className="flex gap-3">
                               <Button
                                 onClick={() => handleCheckIn(escrow.pubkey)}
-                                variant="secondary"
+                                variant="default"
                                 size="lg"
-                                className="w-32"
+                                className={cn(
+                                  "w-32 bg-gradient-to-r from-blue-500 to-blue-600",
+                                  "hover:from-blue-600 hover:to-blue-700",
+                                  "shadow-lg hover:shadow-blue-500/25",
+                                  "border border-white/10",
+                                  "transition-all duration-300 ease-out",
+                                  "font-semibold text-base",
+                                  "disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed",
+                                  "group relative overflow-hidden"
+                                )}
                                 disabled={!extendDuration.days && !extendDuration.months && !extendDuration.years}
                               >
-                                Check In
+                                <span className="relative z-10 flex items-center justify-center gap-2">
+                                  <span>Check In</span>
+                                  <svg 
+                                    className="w-5 h-5 transition-transform group-hover:translate-x-1" 
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path 
+                                      strokeLinecap="round" 
+                                      strokeLinejoin="round" 
+                                      strokeWidth={2} 
+                                      d="M5 13l4 4L19 7"
+                                    />
+                                  </svg>
+                                </span>
+                                <div className="absolute inset-0 bg-white/10 group-hover:bg-white/20 transition-colors duration-300" />
                               </Button>
                               
                               <Button
                                 onClick={() => cancelEscrow(escrow.pubkey)}
-                                variant="destructive"
+                                variant="default"
                                 size="lg"
-                                className="w-32"
+                                className={cn(
+                                  "w-32 bg-gradient-to-r from-red-500 to-red-600",
+                                  "hover:from-red-600 hover:to-red-700",
+                                  "shadow-lg hover:shadow-red-500/25",
+                                  "border border-white/10",
+                                  "transition-all duration-300 ease-out",
+                                  "font-semibold text-base",
+                                  "group relative overflow-hidden"
+                                )}
                               >
-                                Cancel
+                                <span className="relative z-10 flex items-center justify-center gap-2">
+                                  <span>Cancel</span>
+                                  <svg 
+                                    className="w-5 h-5 transition-transform group-hover:translate-x-1" 
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path 
+                                      strokeLinecap="round" 
+                                      strokeLinejoin="round" 
+                                      strokeWidth={2} 
+                                      d="M6 18L18 6M6 6l12 12"
+                                    />
+                                  </svg>
+                                </span>
+                                <div className="absolute inset-0 bg-white/10 group-hover:bg-white/20 transition-colors duration-300" />
                               </Button>
                             </div>
                           </>
@@ -611,20 +694,68 @@ const DeadManSwitch: FC = () => {
           <div className="flex gap-4">
             <Button
               onClick={() => activateSwitch(15)}
-              variant="secondary"
+              variant="default"
               size="lg"
-              className="flex-1"
+              className={cn(
+                "flex-1 bg-gradient-to-r from-purple-500 to-purple-600",
+                "hover:from-purple-600 hover:to-purple-700",
+                "shadow-lg hover:shadow-purple-500/25",
+                "border border-white/10",
+                "transition-all duration-300 ease-out",
+                "font-semibold text-base",
+                "group relative overflow-hidden"
+              )}
             >
-              15s Timer for testing
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                <span>15s Timer for testing</span>
+                <svg 
+                  className="w-5 h-5 transition-transform group-hover:translate-x-1" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </span>
+              <div className="absolute inset-0 bg-white/10 group-hover:bg-white/20 transition-colors duration-300" />
             </Button>
             
             <Button
               onClick={() => activateSwitch(30)}
-              variant="secondary"
+              variant="default"
               size="lg"
-              className="flex-1"
+              className={cn(
+                "flex-1 bg-gradient-to-r from-purple-500 to-purple-600",
+                "hover:from-purple-600 hover:to-purple-700",
+                "shadow-lg hover:shadow-purple-500/25",
+                "border border-white/10",
+                "transition-all duration-300 ease-out",
+                "font-semibold text-base",
+                "group relative overflow-hidden"
+              )}
             >
-              30s Timer for testing
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                <span>30s Timer for testing</span>
+                <svg 
+                  className="w-5 h-5 transition-transform group-hover:translate-x-1" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </span>
+              <div className="absolute inset-0 bg-white/10 group-hover:bg-white/20 transition-colors duration-300" />
             </Button>
           </div>
         </div>
