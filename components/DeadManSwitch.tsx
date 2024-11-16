@@ -10,10 +10,10 @@ import {
   LAMPORTS_PER_SOL
 } from '@solana/web3.js';
 import { Program, AnchorProvider, BN } from '@coral-xyz/anchor';
-import { IDL } from '../types/dead-man-switch';
+import { IDL } from '@/types/dead-man-switch';
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { DatePickerDemo } from './custom-date-picker';
+import { DatePickerDemo } from '@/components/custom-date-picker';
 import { differenceInMinutes, addDays, addMonths, addYears } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -204,14 +204,13 @@ const DeadManSwitch: FC = () => {
 
   // Update activateSwitch to refresh escrows after creation
   const activateSwitch = async (seconds: number) => {
-    if (!beneficiaryAddress || !program || !publicKey || !connection) {
-      toast.error('Missing required parameters', {
-        description: 'Please fill all required fields'
-      });
+    if (!program || !publicKey || !connection) {
+      toast.error('Please connect your wallet first');
       return;
     }
 
     try {
+      // Check wallet balance first
       const balance = await connection.getBalance(publicKey);
       if (balance < LAMPORTS_PER_SOL) {
         toast.error(`Insufficient funds. You need at least 1 SOL. Current balance: ${balance / LAMPORTS_PER_SOL} SOL`);
@@ -229,21 +228,14 @@ const DeadManSwitch: FC = () => {
       // Generate unique seed
       const seed = new Date().getTime().toString();
 
-      // Generate PDA for escrow with seed
+      // Generate PDA for escrow
       const [escrowPDA] = PublicKey.findProgramAddressSync(
         [Buffer.from("escrow"), publicKey.toBuffer(), Buffer.from(seed)],
         PROGRAM_ID
       );
 
-      toast.info('Creating escrow with params:', {
-        description: JSON.stringify({
-          deadline,
-          beneficiary: beneficiaryAddress,
-          timeUntilDeadline: `${seconds} seconds`,
-          seed,
-          escrowPDA: escrowPDA.toString()
-        }, null, 2)
-      });
+      // Add a toast to show transaction is pending
+      toast.info('Please approve the transaction in your wallet');
 
       await program.methods
         .initialize(
@@ -274,7 +266,7 @@ const DeadManSwitch: FC = () => {
 
     } catch (error) {
       console.error('Error creating escrow:', error);
-      toast.error('Failed to create escrow. See console for details.');
+      toast.error('Failed to create escrow.');
     }
   };
 
@@ -365,14 +357,20 @@ const DeadManSwitch: FC = () => {
 
   // Update cancelEscrow to refresh after cancellation
   const cancelEscrow = async (escrowPubkey: PublicKey) => {
-    if (!program || !publicKey) return;
+    if (!program || !publicKey) {
+      toast.error('Wallet not connected');
+      return;
+    }
 
     try {
+      toast.info('Please approve the transaction in your wallet');
+      
       await program.methods
         .cancel()
         .accounts({
           owner: publicKey,
           escrow: escrowPubkey,
+          systemProgram: SystemProgram.programId,
         })
         .rpc();
 
@@ -380,7 +378,7 @@ const DeadManSwitch: FC = () => {
       toast.success('Escrow cancelled successfully');
     } catch (error) {
       console.error('Error cancelling escrow:', error);
-      toast.error('Failed to cancel escrow');
+      toast.error('Failed to cancel escrow. See console for details.');
     }
   };
 

@@ -6,13 +6,12 @@ import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
 import { clusterApiUrl } from '@solana/web3.js';
 import { useNetworkConfiguration } from '@/contexts/NetworkConfigurationProvider';
-import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 
 export const WalletConnectionProvider: FC<{ children: React.ReactNode }> = ({ children }) => {
   const { networkConfiguration } = useNetworkConfiguration();
   
   const endpoint = useMemo(() => {
-    return clusterApiUrl(WalletAdapterNetwork.Devnet);
+    return clusterApiUrl(networkConfiguration);
   }, [networkConfiguration]);
 
   const wallets = useMemo(
@@ -25,7 +24,7 @@ export const WalletConnectionProvider: FC<{ children: React.ReactNode }> = ({ ch
 
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect={false}>
+      <WalletProvider wallets={wallets} autoConnect={true}>
         <WalletModalProvider>{children}</WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>
