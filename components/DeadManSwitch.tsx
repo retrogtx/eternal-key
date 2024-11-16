@@ -14,7 +14,7 @@ import { IDL } from '../types/dead-man-switch';
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DatePickerDemo } from './custom-date-picker';
-import { differenceInMinutes } from 'date-fns';
+import { differenceInMinutes, addDays, addMonths, addYears } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 const PROGRAM_ID = new PublicKey('8hK7vGkWap7CwfWnZG8igqz5uxevUDTbhoeuCcwgvpYq');
@@ -56,6 +56,13 @@ interface EscrowInfo {
   isOwner: boolean;
 }
 
+// Add these interfaces
+interface ExtendDuration {
+  days: number;
+  months: number;
+  years: number;
+}
+
 const DeadManSwitch: FC = () => {
   const { connection } = useConnection();
   const { publicKey, signTransaction, signAllTransactions } = useWallet();
@@ -64,6 +71,11 @@ const DeadManSwitch: FC = () => {
   const [beneficiaryAddress, setBeneficiaryAddress] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [duration, setDuration] = useState<number>(0);
+  const [extendDuration, setExtendDuration] = useState<ExtendDuration>({
+    days: 0,
+    months: 0,
+    years: 0
+  });
 
   // Initialize the program when wallet connects
   useEffect(() => {
@@ -298,18 +310,39 @@ const DeadManSwitch: FC = () => {
     setSelectedDate(undefined); // Reset the date picker after activation
   };
 
-  // Update handleCheckIn to refresh after check-in
+  // Add this function to calculate total seconds from duration
+  const calculateTotalSeconds = (duration: ExtendDuration): number => {
+    const now = new Date();
+    const future = addYears(
+      addMonths(
+        addDays(now, duration.days),
+        duration.months
+      ),
+      duration.years
+    );
+    return Math.floor((future.getTime() - now.getTime()) / 1000);
+  };
+
+  // Update handleCheckIn to use custom duration
   const handleCheckIn = async (escrowPubkey: PublicKey) => {
     if (!program || !publicKey) return;
 
     try {
+      // Validate duration inputs
+      const { days, months, years } = extendDuration;
+      if (days === 0 && months === 0 && years === 0) {
+        toast.error('Please enter at least one duration value');
+        return;
+      }
+
       // Get current time
       const slot = await connection.getSlot();
       const currentTime = await connection.getBlockTime(slot);
       if (!currentTime) throw new Error("Couldn't get block time");
 
-      // Set new deadline 30 seconds from now
-      const newDeadline = currentTime + 30;
+      // Calculate new deadline based on duration inputs
+      const extensionSeconds = calculateTotalSeconds(extendDuration);
+      const newDeadline = currentTime + extensionSeconds;
 
       await program.methods
         .checkin(new BN(newDeadline))
@@ -319,11 +352,14 @@ const DeadManSwitch: FC = () => {
         })
         .rpc();
 
+      // Reset duration inputs after successful check-in
+      setExtendDuration({ days: 0, months: 0, years: 0 });
+      
       await fetchEscrows();
       toast.success('Successfully checked in');
     } catch (error) {
       console.error('Error checking in:', error);
-      toast.error('Failed to check in');
+      toast.error('Failed to check in. See console for details.');
     }
   };
 
@@ -368,6 +404,61 @@ const DeadManSwitch: FC = () => {
       console.error('Error claiming funds:', error);
       toast.error('Failed to claim funds');
     }
+  };
+
+  // Add this component for duration inputs
+  const DurationInputs: FC<{
+    duration: ExtendDuration;
+    onChange: (duration: ExtendDuration) => void;
+  }> = ({ duration, onChange }) => {
+    const handleChange = (field: keyof ExtendDuration, value: string) => {
+      const numValue = parseInt(value) || 0;
+      onChange({ ...duration, [field]: numValue });
+    };
+
+    return (
+      <div className="flex gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-200 mb-2">
+            Days
+          </label>
+          <input
+            type="number"
+            min="0"
+            value={duration.days || ''}
+            onChange={(e) => handleChange('days', e.target.value)}
+            className="w-24 px-3 py-2 bg-white/5 border border-white/10 rounded-lg 
+                     text-white placeholder-gray-400 focus:ring-2 focus:ring-primary/50"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-200 mb-2">
+            Months
+          </label>
+          <input
+            type="number"
+            min="0"
+            value={duration.months || ''}
+            onChange={(e) => handleChange('months', e.target.value)}
+            className="w-24 px-3 py-2 bg-white/5 border border-white/10 rounded-lg 
+                     text-white placeholder-gray-400 focus:ring-2 focus:ring-primary/50"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-200 mb-2">
+            Years
+          </label>
+          <input
+            type="number"
+            min="0"
+            value={duration.years || ''}
+            onChange={(e) => handleChange('years', e.target.value)}
+            className="w-24 px-3 py-2 bg-white/5 border border-white/10 rounded-lg 
+                     text-white placeholder-gray-400 focus:ring-2 focus:ring-primary/50"
+          />
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -491,24 +582,31 @@ const DeadManSwitch: FC = () => {
                         </div>
                       </div>
                       
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         {escrow.account.deadline.toNumber() <= Date.now() / 1000 ? (
+                          // Show claim button if deadline has passed
                           <Button
                             onClick={() => claimEscrow(escrow.pubkey, escrow.account.beneficiary)}
                             variant="default"
                             size="lg"
-                            className="w-32"
+                            className="w-32 bg-green-600 hover:bg-green-700"
                           >
                             Claim
                           </Button>
                         ) : (
+                          // Show check-in and cancel options if deadline hasn't passed
                           <>
+                            <DurationInputs
+                              duration={extendDuration}
+                              onChange={setExtendDuration}
+                            />
                             <div className="flex gap-3">
                               <Button
                                 onClick={() => handleCheckIn(escrow.pubkey)}
                                 variant="secondary"
                                 size="lg"
                                 className="w-32"
+                                disabled={!extendDuration.days && !extendDuration.months && !extendDuration.years}
                               >
                                 Check In
                               </Button>
