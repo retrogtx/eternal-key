@@ -77,7 +77,6 @@ const DeadManSwitch: FC = () => {
   });
   const [depositAmount, setDepositAmount] = useState<number>(1);
 
-  // Initialize the program when wallet connects
   useEffect(() => {
     if (!publicKey || !connection || !signTransaction || !signAllTransactions) return;
 
@@ -92,14 +91,12 @@ const DeadManSwitch: FC = () => {
     setProgram(program);
   }, [publicKey, connection, signTransaction, signAllTransactions]);
 
-  // Fetch escrows only on initial load and when program/wallet is ready
   useEffect(() => {
     if (program && publicKey && connection) {
       fetchEscrows();
     }
   }, [program, publicKey, connection]);
 
-  // Add this useEffect to update duration when date changes
   useEffect(() => {
     if (selectedDate) {
       const now = new Date();
@@ -121,17 +118,14 @@ const DeadManSwitch: FC = () => {
     return `${days}d ${hours}h ${minutes}m`;
   };
 
-  // Add a function to format SOL balance
   const formatSolBalance = (lamports: number) => {
     return `${(lamports / LAMPORTS_PER_SOL).toFixed(2)} SOL`;
   };
 
-  // Modify the fetchEscrows function to get all escrows
   const fetchEscrows = async () => {
     if (!program || !publicKey || !connection) return;
 
     try {
-      // Get escrows where current user is owner
       const ownerEscrows = await program.account.escrow.all([
         {
           memcmp: {
@@ -141,7 +135,6 @@ const DeadManSwitch: FC = () => {
         }
       ]);
 
-      // Get escrows where current user is beneficiary
       const beneficiaryEscrows = await program.account.escrow.all([
         {
           memcmp: {
@@ -186,7 +179,6 @@ const DeadManSwitch: FC = () => {
     }
   };
 
-  // Add status badge component
   const StatusBadge: FC<{ deadline: BN }> = ({ deadline }) => {
     const now = Math.floor(Date.now() / 1000);
     const isExpired = deadline.toNumber() <= now;
@@ -202,7 +194,6 @@ const DeadManSwitch: FC = () => {
     );
   };
 
-  // Update activateSwitch to use the custom amount
   const activateSwitch = async (seconds: number) => {
     if (!program || !publicKey || !connection) {
       toast.error('Please connect your wallet first');
@@ -210,7 +201,6 @@ const DeadManSwitch: FC = () => {
     }
 
     try {
-      // Check wallet balance first
       const balance = await connection.getBalance(publicKey);
       const amountInLamports = depositAmount * LAMPORTS_PER_SOL;
       
@@ -219,7 +209,6 @@ const DeadManSwitch: FC = () => {
         return;
       }
 
-      // Get current time
       const slot = await connection.getSlot();
       const currentTime = await connection.getBlockTime(slot);
       if (!currentTime) throw new Error("Couldn't get block time");
@@ -234,7 +223,6 @@ const DeadManSwitch: FC = () => {
 
       toast.info('Please approve the transactions in your wallet');
 
-      // Initialize escrow
       await program.methods
         .initialize(
           new BN(deadline),
@@ -248,7 +236,6 @@ const DeadManSwitch: FC = () => {
         })
         .rpc();
 
-      // Deposit funds
       await program.methods
         .deposit(new BN(amountInLamports))
         .accounts({
@@ -267,39 +254,32 @@ const DeadManSwitch: FC = () => {
     }
   };
 
-  // Add this function to handle the date selection and switch activation
   const handleDateSelection = async () => {
-    // Validate beneficiary address first
     if (!beneficiaryAddress || beneficiaryAddress.trim() === '') {
       toast.error('Please enter a beneficiary address');
       return;
     }
 
-    // Validate date selection
     if (!selectedDate) {
       toast.error('Please select a deadline date');
       return;
     }
 
-    // Validate duration
     if (duration <= 0) {
       toast.error('Selected date must be in the future');
       return;
     }
 
-    // Validate beneficiary address format
     if (!PublicKey.isOnCurve(beneficiaryAddress)) {
       toast.error('Invalid beneficiary address format');
       return;
     }
 
-    // If all validations pass, proceed with switch activation
     const seconds = duration * 60;
     await activateSwitch(seconds);
-    setSelectedDate(undefined); // Reset the date picker after activation
+    setSelectedDate(undefined);
   };
 
-  // Add this function to calculate total seconds from duration
   const calculateTotalSeconds = (duration: ExtendDuration): number => {
     const now = new Date();
     const future = addYears(
@@ -312,24 +292,20 @@ const DeadManSwitch: FC = () => {
     return Math.floor((future.getTime() - now.getTime()) / 1000);
   };
 
-  // Update handleCheckIn to use custom duration
   const handleCheckIn = async (escrowPubkey: PublicKey) => {
     if (!program || !publicKey) return;
 
     try {
-      // Validate duration inputs
       const { days, months, years } = extendDuration;
       if (days === 0 && months === 0 && years === 0) {
         toast.error('Please enter at least one duration value');
         return;
       }
 
-      // Get current time
       const slot = await connection.getSlot();
       const currentTime = await connection.getBlockTime(slot);
       if (!currentTime) throw new Error("Couldn't get block time");
 
-      // Calculate new deadline based on duration inputs
       const extensionSeconds = calculateTotalSeconds(extendDuration);
       const newDeadline = currentTime + extensionSeconds;
 
@@ -341,7 +317,6 @@ const DeadManSwitch: FC = () => {
         })
         .rpc();
 
-      // Reset duration inputs after successful check-in
       setExtendDuration({ days: 0, months: 0, years: 0 });
       
       await fetchEscrows();
@@ -352,7 +327,6 @@ const DeadManSwitch: FC = () => {
     }
   };
 
-  // Update cancelEscrow to refresh after cancellation
   const cancelEscrow = async (escrowPubkey: PublicKey) => {
     if (!program || !publicKey) {
       toast.error('Wallet not connected');
@@ -379,7 +353,6 @@ const DeadManSwitch: FC = () => {
     }
   };
 
-  // Add a claim function for beneficiaries
   const claimEscrow = async (escrowPubkey: PublicKey, beneficiaryPubkey: PublicKey) => {
     if (!program || !publicKey) return;
 
@@ -401,7 +374,6 @@ const DeadManSwitch: FC = () => {
     }
   };
 
-  // Add this component for duration inputs
   const DurationInputs: FC<{
     duration: ExtendDuration;
     onChange: (duration: ExtendDuration) => void;
@@ -467,7 +439,6 @@ const DeadManSwitch: FC = () => {
             </p>
           </div>
 
-          {/* Create New Escrow Section */}
           <div className="bg-white/5 backdrop-blur-lg rounded-xl p-8 shadow-lg border border-white/10">
             <h3 className="text-xl font-semibold text-white mb-6">Create New Escrow</h3>
             
@@ -486,7 +457,6 @@ const DeadManSwitch: FC = () => {
                 />
               </div>
 
-              {/* Add Amount Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-2">
                   Amount (SOL)
@@ -554,7 +524,6 @@ const DeadManSwitch: FC = () => {
             </div>
           </div>
 
-          {/* Active Escrows Section */}
           <div className="bg-white/5 backdrop-blur-lg rounded-xl p-8 shadow-lg border border-white/10">
             <h3 className="text-xl font-semibold text-white mb-6">Your Escrows</h3>
             
@@ -595,7 +564,6 @@ const DeadManSwitch: FC = () => {
                       
                       <div className="space-y-4">
                         {escrow.account.deadline.toNumber() <= Date.now() / 1000 ? (
-                          // Show claim button if deadline has passed
                           <Button
                             onClick={() => claimEscrow(escrow.pubkey, escrow.account.beneficiary)}
                             variant="default"
@@ -605,7 +573,6 @@ const DeadManSwitch: FC = () => {
                             Claim
                           </Button>
                         ) : (
-                          // Show check-in and cancel options if deadline hasn't passed
                           <>
                             <DurationInputs
                               duration={extendDuration}
@@ -641,7 +608,6 @@ const DeadManSwitch: FC = () => {
             )}
           </div>
 
-          {/* Quick Actions */}
           <div className="flex gap-4">
             <Button
               onClick={() => activateSwitch(15)}
