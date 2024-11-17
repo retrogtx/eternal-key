@@ -433,9 +433,9 @@ const DeadManSwitch: FC = () => {
       {publicKey && (
         <div className="space-y-8">
           <div>
-            <h2 className="text-2xl font-bold text-white mb-2">Dead Man&apos;s Switch</h2>
+            <h2 className="text-2xl font-bold text-white mb-2">Time-Locked Succession</h2>
             <p className="text-gray-600 dark:text-gray-400">
-              Set up automatic transfer of funds if you don&apos;t check in regularly.
+              Set up automatic transfer of funds if you don&apos;t check in regularly
             </p>
           </div>
 
@@ -707,7 +707,7 @@ const DeadManSwitch: FC = () => {
               )}
             >
               <span className="relative z-10 flex items-center justify-center gap-2">
-                <span>15s Timer for testing</span>
+                <span>15s Escrow for testing</span>
                 <svg 
                   className="w-5 h-5 transition-transform group-hover:translate-x-1" 
                   fill="none" 
@@ -740,7 +740,7 @@ const DeadManSwitch: FC = () => {
               )}
             >
               <span className="relative z-10 flex items-center justify-center gap-2">
-                <span>30s Timer for testing</span>
+                <span>30s Escrow for testing</span>
                 <svg 
                   className="w-5 h-5 transition-transform group-hover:translate-x-1" 
                   fill="none" 
