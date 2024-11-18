@@ -196,7 +196,7 @@ const DeadManSwitch: FC = () => {
 
   const activateSwitch = async (seconds: number) => {
     if (!program || !publicKey || !connection) {
-      toast.error('Please connect your wallet first');
+      toast.error('Please connect your wallet first.');
       return;
     }
 
@@ -205,7 +205,7 @@ const DeadManSwitch: FC = () => {
       const amountInLamports = depositAmount * LAMPORTS_PER_SOL;
       
       if (balance < amountInLamports) {
-        toast.error(`Insufficient funds. You need at least ${depositAmount} SOL. Current balance: ${(balance / LAMPORTS_PER_SOL).toFixed(2)} SOL`);
+        toast.error(`Insufficient funds. You need at least ${depositAmount} SOL. Current balance: ${(balance / LAMPORTS_PER_SOL).toFixed(2)} SOL.`);
         return;
       }
 
@@ -221,7 +221,7 @@ const DeadManSwitch: FC = () => {
         PROGRAM_ID
       );
 
-      toast.info('Please approve the transactions in your wallet');
+      toast.info('Please approve both the transactions.');
 
       await program.methods
         .initialize(
@@ -246,7 +246,7 @@ const DeadManSwitch: FC = () => {
         .rpc();
 
       await fetchEscrows();
-      toast.success('Escrow created successfully');
+      toast.success('Escrow created successfully.');
 
     } catch (error) {
       console.error('Error creating escrow:', error);
@@ -256,22 +256,22 @@ const DeadManSwitch: FC = () => {
 
   const handleDateSelection = async () => {
     if (!beneficiaryAddress || beneficiaryAddress.trim() === '') {
-      toast.error('Please enter a beneficiary address');
+      toast.error('Please enter a beneficiary address.');
       return;
     }
 
     if (!selectedDate) {
-      toast.error('Please select a deadline date');
+      toast.error('Please select a deadline date.');
       return;
     }
 
     if (duration <= 0) {
-      toast.error('Selected date must be in the future');
+      toast.error('Selected date must be in the future.');
       return;
     }
 
     if (!PublicKey.isOnCurve(beneficiaryAddress)) {
-      toast.error('Invalid beneficiary address format');
+      toast.error('Invalid beneficiary address format.');
       return;
     }
 
@@ -298,7 +298,7 @@ const DeadManSwitch: FC = () => {
     try {
       const { days, months, years } = extendDuration;
       if (days === 0 && months === 0 && years === 0) {
-        toast.error('Please enter at least one duration value');
+        toast.error('Please enter at least one duration value.');
         return;
       }
 
@@ -320,7 +320,7 @@ const DeadManSwitch: FC = () => {
       setExtendDuration({ days: 0, months: 0, years: 0 });
       
       await fetchEscrows();
-      toast.success('Successfully checked in');
+      toast.success('Successfully checked in.');
     } catch (error) {
       console.error('Error checking in:', error);
       toast.error('Failed to check in. See console for details.');
@@ -329,12 +329,12 @@ const DeadManSwitch: FC = () => {
 
   const cancelEscrow = async (escrowPubkey: PublicKey) => {
     if (!program || !publicKey) {
-      toast.error('Wallet not connected');
+      toast.error('Wallet not connected.');
       return;
     }
 
     try {
-      toast.info('Please approve the transaction in your wallet');
+      toast.info('Please approve the transaction in your wallet.');
       
       await program.methods
         .cancel()
@@ -348,8 +348,7 @@ const DeadManSwitch: FC = () => {
       await fetchEscrows();
       toast.success('Escrow cancelled successfully. Funds returned.');
     } catch (error) {
-      console.error('Error cancelling escrow:', error);
-      toast.error('Failed to cancel escrow. See console for details.');
+      toast.error(`Failed to cancel escrow. See console for details. ${error}`);
     }
   };
 
@@ -367,10 +366,10 @@ const DeadManSwitch: FC = () => {
         .rpc();
 
       await fetchEscrows();
-      toast.success('Funds claimed successfully');
+      toast.success('Funds claimed successfully.');
     } catch (error) {
       console.error('Error claiming funds:', error);
-      toast.error('Failed to claim funds');
+      toast.error('Failed to claim funds.');
     }
   };
 
@@ -569,7 +568,7 @@ const DeadManSwitch: FC = () => {
                               if (escrow.account.deadline.toNumber() <= Date.now() / 1000) {
                                 claimEscrow(escrow.pubkey, escrow.account.beneficiary);
                               } else {
-                                toast.error(`Cannot claim yet. Time remaining: ${escrow.timeRemaining}`);
+                                toast.error(`Cannot claim yet. Time remaining: ${escrow.timeRemaining}.`);
                               }
                             }}
                             variant="default"
