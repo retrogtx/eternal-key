@@ -11,10 +11,11 @@ const config: Config = {
   	extend: {
   		animation: {
   			fadeIn: 'fadeIn 0.5s ease-in',
-  			slideUp: 'slideUp 0.5s ease-out',
+  			slideUp: 'slideUzp 0.5s ease-out',
   			'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
   			'accordion-down': 'accordion-down 0.2s ease-out',
-  			'accordion-up': 'accordion-up 0.2s ease-out'
+  			'accordion-up': 'accordion-up 0.2s ease-out',
+  			'shiny-text': 'shiny-text 8s infinite'
   		},
   		keyframes: {
   			fadeIn: {
@@ -49,6 +50,14 @@ const config: Config = {
   				},
   				to: {
   					height: '0'
+  				}
+  			},
+  			'shiny-text': {
+  				'0%, 90%, 100%': {
+  					'background-position': 'calc(-100% - var(--shiny-width)) 0'
+  				},
+  				'30%, 60%': {
+  					'background-position': 'calc(100% + var(--shiny-width)) 0'
   				}
   			}
   		},

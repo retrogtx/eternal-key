@@ -6,6 +6,11 @@ import dynamic from 'next/dynamic';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { NetworkSwitcher } from './NetworkSwitcher';
 import { CardSpotlight } from "@/components/ui/card-spotlight";
+import Particles from "@/components/ui/particles";
+import FeaturesSectionDemo from "@/components/blocks/features-section-demo-2";
+import AnimatedShinyText from "@/components/ui/animated-shiny-text";
+import { ArrowRightIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const WalletMultiButton = dynamic(
   () => import('@solana/wallet-adapter-react-ui').then((mod) => mod.WalletMultiButton),
@@ -21,69 +26,46 @@ const HomePage: FC = () => {
   const { connected } = useWallet();
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-black text-white overflow-hidden">
       {!connected ? (
-        <div className="relative min-h-screen flex flex-col items-center justify-center">
-          {/* Subtle grid background */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f1f1f_1px,transparent_1px),linear-gradient(to_bottom,#1f1f1f_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
-
-          <div className="relative text-center space-y-16 p-8 max-w-6xl mx-auto">
-            {/* Hero Section */}
-            <div className="space-y-6">
-              <div className="inline-block mb-4">
-                <span className="px-4 py-1.5 rounded-full text-sm font-medium bg-zinc-900 text-zinc-400 border border-zinc-800">
-                  Pass your Crypto
-                </span>
+        <div className="relative min-h-screen flex flex-col">
+          <Particles
+            className="absolute inset-0"
+            quantity={300}
+            staticity={30}
+            ease={50}
+            color="#ffffff"
+          />
+          <div className="relative z-10 text-center space-y-16 p-8 max-w-6xl mx-auto">
+            <div className="space-y-6 pt-24">
+              <div className="flex flex-col items-center gap-2">
+              <div
+                className={cn(
+                  "group rounded-full border border-white/10 bg-neutral-900 text-sm text-white/70 transition-all ease-in hover:border-white/20"
+                )}
+                >
+                  <AnimatedShinyText className="inline-flex items-center justify-center px-3 py-0.5 transition ease-out">
+                    <span>✨ Join the beta</span>
+                    <ArrowRightIcon className="ml-1 size-2.5 transition-transform duration-300 ease-in-out group-hover:translate-x-0.5" />
+                  </AnimatedShinyText>
+                </div>
+                <h1 className="text-6xl font-bold text-white tracking-tight">
+                  Eternal Key
+                </h1>
               </div>
-              <h1 className="text-6xl font-bold text-white tracking-tight">
-                Eternal Key
-              </h1>
               <p className="text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-                The next generation of digital asset inheritance. 
-                Secure, automated, and decentralized on Solana. Currently in beta.
+                The next generation of digital asset inheritance.
+                <br />
+                Secure, automated, and decentralized on Solana.
               </p>
             </div>
             
-            {/* CTA Button */}
             <div className="inline-block">
               <WalletMultiButton className="!bg-white !text-black hover:!bg-zinc-200 !px-8 !py-4 !rounded-lg !font-medium !text-base transition-colors" />
             </div>
             
-            {/* Features Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left mt-24">
-              {[
-                {
-                  title: "Security First",
-                  description: "Built on Solana, the most secure blockchain",
-                  icon: "🔐"
-                },
-                {
-                  title: "Automation",
-                  description: "Intelligent triggers with customizable periods",
-                  icon: "⚡"
-                },
-                {
-                  title: "Full Control",
-                  description: "Complete authority over your digital assets",
-                  icon: "🎯"
-                }
-              ].map((feature) => (
-                <div 
-                  key={feature.title} 
-                  className="p-6 bg-zinc-900/50 rounded-lg border border-zinc-800/50 hover:border-zinc-700 transition-colors"
-                >
-                  <div className="text-2xl mb-4">{feature.icon}</div>
-                  <h3 className="text-lg font-medium text-white mb-2">
-                    {feature.title}
-                  </h3>
-                  <p className="text-zinc-400 text-sm">
-                    {feature.description}
-                  </p>
-                </div>
-              ))}
-            </div>
+            <FeaturesSectionDemo />
 
-            {/* Authentication Steps Card */}
             <div className="flex justify-center mt-24">
               <CardSpotlight className="max-w-md">
                 <p className="text-xl font-bold relative z-20 mt-2 text-white">
@@ -107,7 +89,6 @@ const HomePage: FC = () => {
               </CardSpotlight>
             </div>
 
-            {/* FAQ Section */}
             <div className="mt-16 max-w-2xl mx-auto text-left">
               <h2 className="text-2xl font-bold text-white mb-6 text-center">Frequently Asked Questions</h2>
               <Accordion type="single" collapsible className="w-full space-y-4">
@@ -117,7 +98,7 @@ const HomePage: FC = () => {
                   </AccordionTrigger>
                   <AccordionContent className="text-zinc-400 pb-4">
                     Eternal Key uses smart contracts on the Solana blockchain to create a secure, automated inheritance system. 
-                    Set up automatic transfers that trigger if you don&apos;t check in within your specified timeframe.
+                    You first set up an escrow which stores your assets, and specify the transfer amount along with a time period.
                   </AccordionContent>
                 </AccordionItem>
 
@@ -161,8 +142,7 @@ const HomePage: FC = () => {
           </div>
         </div>
       ) : (
-        <div className="min-h-screen bg-black text-white">
-          {/* Dashboard Navigation */}
+          <div className="min-h-screen bg-black text-white">
           <nav className="bg-zinc-900/50 backdrop-blur-sm sticky top-0 z-50 border-b border-zinc-800">
             <div className="max-w-6xl mx-auto flex justify-between items-center px-6 py-4">
               <div className="flex items-center space-x-4">
@@ -178,7 +158,7 @@ const HomePage: FC = () => {
             </div>
           </nav>
           
-          {/* Dashboard Content */}
+
           <main className="max-w-6xl mx-auto p-6">
             <div className="bg-zinc-900/50 rounded-lg border border-zinc-800 p-6">
               <DeadManSwitch />
