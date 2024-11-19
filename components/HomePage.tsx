@@ -5,6 +5,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import dynamic from 'next/dynamic';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { NetworkSwitcher } from './NetworkSwitcher';
+import { CardSpotlight } from "@/components/ui/card-spotlight";
 
 const WalletMultiButton = dynamic(
   () => import('@solana/wallet-adapter-react-ui').then((mod) => mod.WalletMultiButton),
@@ -53,7 +54,7 @@ const HomePage: FC = () => {
               {[
                 {
                   title: "Security First",
-                  description: "Military-grade encryption with blockchain security",
+                  description: "Built on Solana, the most secure blockchain",
                   icon: "🔐"
                 },
                 {
@@ -82,6 +83,30 @@ const HomePage: FC = () => {
               ))}
             </div>
 
+            {/* Authentication Steps Card */}
+            <div className="flex justify-center mt-24">
+              <CardSpotlight className="max-w-md">
+                <p className="text-xl font-bold relative z-20 mt-2 text-white">
+                  How it works
+                </p>
+                <div className="text-neutral-200 mt-4 relative z-20">
+                  Follow these steps to set up your inheritance:
+                  <ul className="list-none mt-4 space-y-3">
+                    <Step title="Connect your Solana wallet" />
+                    <Step title="Enter your beneficiary's wallet address" />
+                    <Step title="Enter amount to pass" />
+                    <Step title="Configure check-in period" />
+                    <Step title="Create switch" />
+                    <Step title="Wait for time to pass" />
+                    <Step title="Withdraw from beneficiary's wallet!" />
+                  </ul>
+                </div>
+                <p className="text-neutral-300 mt-6 relative z-20 text-sm">
+                  You can cancel the switch anytime until the time is up.
+                </p>
+              </CardSpotlight>
+            </div>
+
             {/* FAQ Section */}
             <div className="mt-16 max-w-2xl mx-auto text-left">
               <h2 className="text-2xl font-bold text-white mb-6 text-center">Frequently Asked Questions</h2>
@@ -101,28 +126,27 @@ const HomePage: FC = () => {
                     What happens to my assets?
                   </AccordionTrigger>
                   <AccordionContent className="text-zinc-400 pb-4">
-                    Your assets remain securely locked in the smart contract until either you miss a check-in deadline or you choose to withdraw them. 
-                    You maintain full control over your assets while the switch is active.
+                    Your assets remain securely locked in the smart contract until either you miss a check-in deadline or you choose to cancel the escrow and withdraw them. 
+                    You maintain full control over your assets while the switch is active. Once the time is up, only the beneficiary wallet can withdraw the assets.
                   </AccordionContent>
                 </AccordionItem>
 
                 <AccordionItem value="item-3" className="border-none bg-zinc-900/50 rounded-lg px-4">
                   <AccordionTrigger className="hover:no-underline text-white py-4">
-                    Is the service secure?
+                    Is this secure?
                   </AccordionTrigger>
                   <AccordionContent className="text-zinc-400 pb-4">
-                    Yes, our service is built on Solana&apos;s blockchain technology, ensuring maximum security and transparency. 
+                    Yes, alot. Eternal Key is built on Solana&apos;s blockchain, ensuring maximum security and transparency. 
                     All transactions and rules are enforced by smart contracts, making the process completely trustless and automated.
                   </AccordionContent>
                 </AccordionItem>
 
                 <AccordionItem value="item-4" className="border-none bg-zinc-900/50 rounded-lg px-4">
                   <AccordionTrigger className="hover:no-underline text-white py-4">
-                    How do I get started?
+                    How do I verify this so I can trust it?
                   </AccordionTrigger>
                   <AccordionContent className="text-zinc-400 pb-4">
-                    Getting started is simple: 1) Connect your Solana wallet, 2) Create a new switch by specifying your beneficiary&apos;s wallet address, 
-                    3) Create the escrow account 4) Give wallet perimissions to transfer 1 SOL (we kept it low & on devnet for testing purposes for now) 5. Wait for the time to pass. 6. Login with the beneficiary account to receive SOL.
+                    You can verify the code and smart contract by checking the source code on <a href="https://github.com/amritwt/eternal-key" className="underline">Github</a>.
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
@@ -130,11 +154,8 @@ const HomePage: FC = () => {
 
             {/* Trust Indicators */}
             <div className="pt-16 border-t border-zinc-900">
-              <div className="flex flex-wrap justify-center gap-x-12 gap-y-4 text-zinc-500 text-sm">
-                <span>Enterprise Security</span>
-                <span>Instant Execution</span>
-                <span>Decentralized</span>
-                <span>Full Transparency</span>
+              <div className="flex flex-wrap justify-center text-zinc-500 text-sm">
+              <a href="https://twitter.com/amritwt" className="hover:underline">@amritwt</a>
               </div>
             </div>
           </div>
@@ -166,6 +187,35 @@ const HomePage: FC = () => {
         </div>
       )}
     </div>
+  );
+};
+
+const Step = ({ title }: { title: string }) => {
+  return (
+    <li className="flex gap-2 items-start">
+      <CheckIcon />
+      <p className="text-white">{title}</p>
+    </li>
+  );
+};
+
+const CheckIcon = () => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className="h-4 w-4 text-blue-500 mt-1 flex-shrink-0"
+    >
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path
+        d="M12 2c-.218 0 -.432 .002 -.642 .005l-.616 .017l-.299 .013l-.579 .034l-.553 .046c-4.785 .464 -6.732 2.411 -7.196 7.196l-.046 .553l-.034 .579c-.005 .098 -.01 .198 -.013 .299l-.017 .616l-.004 .318l-.001 .324c0 .218 .002 .432 .005 .642l.017 .616l.013 .299l.034 .579l.046 .553c.464 4.785 2.411 6.732 7.196 7.196l.553 .046l.579 .034c.098 .005 .198 .01 .299 .013l.616 .017l.642 .005l.642 -.005l.616 -.017l.299 -.013l.579 -.034l.553 -.046c4.785 -.464 6.732 -2.411 7.196 -7.196l.046 -.553l.034 -.579c.005 -.098 .01 -.198 .013 -.299l.017 -.616l.005 -.642l-.005 -.642l-.017 -.616l-.013 -.299l-.034 -.579l-.046 -.553c-.464 -4.785 -2.411 -6.732 -7.196 -7.196l-.553 -.046l-.579 -.034a28.058 28.058 0 0 0 -.299 -.013l-.616 -.017l-.318 -.004l-.324 -.001zm2.293 7.293a1 1 0 0 1 1.497 1.32l-.083 .094l-4 4a1 1 0 0 1 -1.32 .083l-.094 -.083l-2 -2a1 1 0 0 1 1.32 -1.497l.094 .083l1.293 1.292l3.293 -3.292z"
+        fill="currentColor"
+        strokeWidth="0"
+      />
+    </svg>
   );
 };
 
