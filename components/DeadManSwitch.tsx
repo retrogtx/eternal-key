@@ -499,7 +499,7 @@ const DeadManSwitch: FC = () => {
                     "disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed",
                     "group relative overflow-hidden"
                   )}
-                  disabled={!selectedDate || duration <= 0}
+                  disabled={!selectedDate || !beneficiaryAddress || !depositAmount || duration <= 0}
                 >
                   <span className="relative z-10 flex items-center justify-center gap-2">
                     <span>Create Switch</span>
