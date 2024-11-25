@@ -17,8 +17,40 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Eternal Key",
-  description: "Transfer your crypto assets to a beneficiary after a period of time. An inheritance solution for cryptocurrency based on the Solana blockchain.",
+  title: "Eternal Key - Decentralized Crypto Inheritance on Solana",
+  description: "A decentralized dead man's switch for crypto inheritance on Solana. Secure your digital assets' future with automated, trustless transfers to designated beneficiaries.",
+  keywords: "crypto inheritance, Solana, dead man's switch, digital assets, blockchain inheritance, crypto estate planning, decentralized inheritance",
+  openGraph: {
+    title: "Eternal Key - Decentralized Crypto Inheritance on Solana",
+    description: "Secure your crypto assets' future with automated, trustless inheritance on Solana. Set up a dead man's switch for your digital assets.",
+    url: "https://eternalkey.xyz",
+    siteName: "Eternal Key",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Eternal Key - Decentralized Crypto Inheritance on Solana",
+    description: "Secure your crypto assets' future with automated, trustless inheritance on Solana.",
+    creator: "@amritwt",
+  },
+  icons: {
+    icon: "/favicon.ico",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    google: "6JtALOS_ykm2LnlrEBOUUjVoc7NCwn",
+  },
 };
 
 export default function RootLayout({
