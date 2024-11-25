@@ -18,7 +18,7 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   title: "Eternal Key",
-  description: "Transfer your crypto assets to a beneficiary after a period of time.",
+  description: "Transfer your crypto assets to a beneficiary after a period of time. An inheritance solution for cryptocurrency based on the Solana blockchain.",
 };
 
 export default function RootLayout({
