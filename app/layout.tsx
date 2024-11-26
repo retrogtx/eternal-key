@@ -17,9 +17,10 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://eternalkey.xyz"),
   title: "Eternal Key - Decentralized Crypto Inheritance on Solana",
   description: "A decentralized dead man's switch for crypto inheritance on Solana. Secure your digital assets' future with automated, trustless transfers to designated beneficiaries.",
-  keywords: "crypto inheritance, Solana, dead man's switch, digital assets, blockchain inheritance, crypto estate planning, decentralized inheritance",
+  keywords: ["crypto inheritance", "Solana", "dead man's switch", "digital assets", "blockchain inheritance", "crypto inheritance", "decentralized inheritance"],
   openGraph: {
     title: "Eternal Key - Decentralized Crypto Inheritance on Solana",
     description: "Secure your crypto assets' future with automated, trustless inheritance on Solana. Set up a dead man's switch for your digital assets.",
@@ -35,7 +36,14 @@ export const metadata: Metadata = {
     creator: "@amritwt",
   },
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: 'favicon.ico', sizes: 'any' },
+      { url: 'android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: 'android-chrome-512x512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: 'apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
   },
   robots: {
     index: true,
